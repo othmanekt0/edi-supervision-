@@ -1,0 +1,361 @@
+# =============================================================================
+# Supervision EDI — Stack locale complète FUSIONNÉE (Stambia + Airflow + Grafana)
+#
+# Services Stambia (existants) :
+#   postgres-supervision   Base cible (schéma supervision, Flyway)          -> 5432
+#   postgres-stambia       Base source mock Stambia (CDC Debezium)          -> 5433
+#   zookeeper              Requis par Kafka                                 -> 2181
+#   kafka                  Broker Kafka                                    -> 9092 / 29092
+#   kafka-connect          Kafka Connect + plugin Debezium PostgreSQL       -> 8083
+#   kafka-ui               UI pour explorer les topics                     -> 8080
+#
+# Services Airflow (ajoutés) :
+#   postgres-airflow       Base native Airflow (dag_run, task_instance...) -> 5434 (externe) / 5432 (interne)
+#   redis                  Broker Celery pour Airflow                       -> interne uniquement
+#   airflow-init           Init one-shot (migration DB + user admin)
+#   airflow-webserver      UI + API REST Airflow                            -> 8085 (au lieu de 8080, déjà pris par kafka-ui)
+#   airflow-scheduler       Ordonnanceur des DAGs
+#   airflow-worker          Worker Celery (exécution des tasks)
+#   airflow-triggerer       Gestion des tasks différées (deferrable operators)
+#
+# Services Grafana (ajouté) :
+#   grafana                Dashboards EDI Supervision                       -> 3000
+#
+# ⚠️ PORTS CHANGÉS PAR RAPPORT AU FICHIER ORIGINAL DE TON COLLÈGUE :
+#   - airflow webserver   : 8080 -> 8085  (8080 est déjà utilisé par kafka-ui)
+#   - postgres airflow    : 5433 -> 5434  (5433 est déjà utilisé par pg-stambia)
+#
+# Pense à mettre à jour application.properties du projet clients1 en conséquence :
+#   airflow.rest.base-url=http://localhost:8085
+#   airflow.datasource.url=jdbc:postgresql://localhost:5434/airflow
+# =============================================================================
+
+x-airflow-common: &airflow-common
+  image: apache/airflow:2.9.3
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres-airflow/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__FERNET_KEY: 'QsaLA7huH_XABOT6Oo4ZWQvB8hgwPLtN-aqI3ge2hrg='
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN_CMD: ''
+    AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT: '300'
+    AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT: '300'
+    AIRFLOW__WEBSERVER__WORKERS: '2'
+  volumes:
+    - ./airflow/dags:/opt/airflow/dags
+    - ./airflow/logs:/opt/airflow/logs
+    - ./airflow/plugins:/opt/airflow/plugins
+    - ./airflow/config:/opt/airflow/config
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on: &airflow-common-depends-on
+    redis:
+      condition: service_healthy
+    postgres-airflow:
+      condition: service_healthy
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — base de SUPERVISION (cible Spring Boot + Flyway)
+  # ---------------------------------------------------------------------------
+  postgres-supervision:
+    image: postgres:16
+    container_name: pg-supervision
+    environment:
+      POSTGRES_DB:       supervision
+      POSTGRES_USER:     supervision
+      POSTGRES_PASSWORD: supervision
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_supervision_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U supervision -d supervision"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — base STAMBIA mock (source CDC Debezium)
+  # ---------------------------------------------------------------------------
+  postgres-stambia:
+    image: postgres:16
+    container_name: pg-stambia
+    environment:
+      POSTGRES_DB:       stambia
+      POSTGRES_USER:     stambia
+      POSTGRES_PASSWORD: stambia
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_stambia_data:/var/lib/postgresql/data
+      - ./docker/stambia-init:/docker-entrypoint-initdb.d
+    command: >
+      postgres
+        -c wal_level=logical
+        -c max_replication_slots=4
+        -c max_wal_senders=4
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stambia -d stambia"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — base AIRFLOW NATIVE (dag_run, task_instance, dag, sla_miss...)
+  # Port externe changé : 5433 -> 5434 (5433 est déjà pris par pg-stambia)
+  # wal_level=logical activé pour permettre à Debezium de lire cette base aussi
+  # ---------------------------------------------------------------------------
+  postgres-airflow:
+    image: postgres:13
+    container_name: pg-airflow
+    environment:
+      POSTGRES_USER:     airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB:       airflow
+    ports:
+      - "5434:5432"
+    volumes:
+      - pg_airflow_data:/var/lib/postgresql/data
+    command: >
+      postgres
+        -c wal_level=logical
+        -c max_replication_slots=4
+        -c max_wal_senders=4
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Redis — broker Celery pour Airflow
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7.2-bookworm
+    container_name: redis-airflow
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Airflow — init (migration DB + création user admin, one-shot)
+  # ---------------------------------------------------------------------------
+  airflow-init:
+    <<: *airflow-common
+    container_name: airflow-init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username airflow \
+          --password airflow \
+          --firstname Air \
+          --lastname Flow \
+          --role Admin \
+          --email airflow@example.com
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+
+  # ---------------------------------------------------------------------------
+  # Airflow — webserver (UI + API REST)
+  # Port changé : 8080 -> 8085 (8080 est déjà pris par kafka-ui)
+  # ---------------------------------------------------------------------------
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: airflow-airflow-webserver-1
+    command: webserver
+    ports:
+      - "8085:8080"
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+
+  # ---------------------------------------------------------------------------
+  # Airflow — scheduler
+  # ---------------------------------------------------------------------------
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: airflow-scheduler
+    command: scheduler
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob --hostname \"$${HOSTNAME}\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Airflow — worker Celery
+  # ---------------------------------------------------------------------------
+  airflow-worker:
+    <<: *airflow-common
+    container_name: airflow-worker
+    command: celery worker
+    environment:
+      <<: *airflow-common-env
+      DUMB_INIT_SETSID: "0"
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  # ---------------------------------------------------------------------------
+  # Airflow — triggerer (deferrable operators)
+  # ---------------------------------------------------------------------------
+  airflow-triggerer:
+    <<: *airflow-common
+    container_name: airflow-triggerer
+    command: triggerer
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  # ---------------------------------------------------------------------------
+  # Zookeeper
+  # ---------------------------------------------------------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME:   2000
+    ports:
+      - "2181:2181"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo ruok | timeout 2 bash -c 'cat < /dev/null > /dev/tcp/localhost/2181'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Kafka Broker
+  # ---------------------------------------------------------------------------
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID:                        1
+      KAFKA_ZOOKEEPER_CONNECT:                zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP:   PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS:             PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE:        "true"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Kafka Connect + Debezium PostgreSQL Connector
+  # ---------------------------------------------------------------------------
+  kafka-connect:
+    image: debezium/connect:2.6
+    container_name: kafka-connect
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres-stambia:
+        condition: service_healthy
+      postgres-airflow:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    environment:
+      BOOTSTRAP_SERVERS:            kafka:29092
+      GROUP_ID:                     supervision-connect-group
+      CONFIG_STORAGE_TOPIC:         _connect-configs
+      OFFSET_STORAGE_TOPIC:         _connect-offsets
+      STATUS_STORAGE_TOPIC:         _connect-status
+      CONFIG_STORAGE_REPLICATION_FACTOR:  1
+      OFFSET_STORAGE_REPLICATION_FACTOR:  1
+      STATUS_STORAGE_REPLICATION_FACTOR:  1
+      KEY_CONVERTER:                org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER:              org.apache.kafka.connect.json.JsonConverter
+      KEY_CONVERTER_SCHEMAS_ENABLE:   "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/connectors || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # ---------------------------------------------------------------------------
+  # Kafka UI — explorer topics et messages
+  # ---------------------------------------------------------------------------
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME:            local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: debezium
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect:8083
+
+  # ---------------------------------------------------------------------------
+  # Grafana — Dashboards EDI Supervision
+  # Accès : http://localhost:3000  (admin / admin)
+  # Data source : PostgreSQL — host=pg-supervision:5432, db=supervision
+  # ---------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards-json
+    depends_on:
+      postgres-supervision:
+        condition: service_healthy
+
+# =============================================================================
+# Volumes nommés
+# =============================================================================
+volumes:
+  pg_supervision_data:
+  pg_stambia_data:
+  pg_airflow_data:
+  grafana_data:

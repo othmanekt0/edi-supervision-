@@ -1,0 +1,24 @@
+{
+  "name": "stambia-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "pg-stambia",
+    "database.port": "5432",
+    "database.user": "debezium_user",
+    "database.password": "debezium_pass",
+    "database.dbname": "stambia",
+    "database.server.name": "stambia",
+    "topic.prefix": "stambia",
+    "schema.include.list": "log",
+    "table.include.list": "log.stb_log_session_sess,log.stb_log_action_act,log.stb_log_delivery_dlv",
+    "plugin.name": "pgoutput",
+    "publication.autocreate.mode": "disabled",
+    "slot.name": "debezium_stambia_slot",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false  ",
+    "value.converter.schemas.enable": "false",
+    "decimal.handling.mode": "string",
+    "time.precision.mode": "connect"
+  }
+}

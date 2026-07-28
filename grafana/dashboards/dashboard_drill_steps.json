@@ -1,0 +1,611 @@
+{
+  "apiVersion": "dashboard.grafana.app/v2",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "supervision-steps",
+    "namespace": "default",
+    "uid": "f66a65c4-95ea-450e-aa22-6b667f342858",
+    "resourceVersion": "1784743223227997",
+    "generation": 11,
+    "creationTimestamp": "2026-07-22T15:52:01Z",
+    "labels": {
+      "grafana.app/deprecatedInternalID": "3798257598996480"
+    },
+    "annotations": {
+      "grafana.app/createdBy": "user:dfqvz3nvoyx34d",
+      "grafana.app/folder": "bfssfjhjmppmof",
+      "grafana.app/saved-from-ui": "Grafana v13.1.0 (b309c9bb3b)",
+      "grafana.app/updatedBy": "user:dfqvz3nvoyx34d",
+      "grafana.app/updatedTimestamp": "2026-07-22T18:00:23Z",
+      "grafana.app/folderTitle": "vue global d'erreur",
+      "grafana.app/folderUrl": "/dashboards/f/bfswew4gwhzwga/vue-global-d-erreur"
+    }
+  },
+  "spec": {
+    "annotations": [
+      {
+        "kind": "AnnotationQuery",
+        "spec": {
+          "query": {
+            "kind": "DataQuery",
+            "group": "grafana",
+            "version": "v0",
+            "datasource": {
+              "name": "-- Grafana --"
+            },
+            "spec": {}
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "builtIn": true
+        }
+      }
+    ],
+    "cursorSync": "Off",
+    "description": "Sous-sessions FAILED ou FAILURE pour une execution donnee — drill-down depuis le dashboard Executions",
+    "editable": true,
+    "elements": {
+      "panel-2": {
+        "kind": "Panel",
+        "spec": {
+          "id": 2,
+          "title": "Sous-sessions en erreur",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-postgresql-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "cfqvza7ykhudce"
+                      },
+                      "spec": {
+                        "format": "table",
+                        "rawSql": "SELECT COUNT(*) AS \"Sous-sessions Failed\"\nFROM fact_execution_step s\nWHERE s.execution_id = $execution_id\n  AND UPPER(s.status) IN ('FAILED', 'FAILURE')"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.1.0",
+            "spec": {
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "textMode": "auto",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-4": {
+        "kind": "Panel",
+        "spec": {
+          "id": 4,
+          "title": "Sous-sessions / Actions FAILED ou FAILURE",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-postgresql-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "cfqvza7ykhudce"
+                      },
+                      "spec": {
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT\n  CASE\n    WHEN s.parent_step_id IS NULL THEN 0\n    ELSE 1\n  END                          AS \"Niveau\",\n  s.step_name                  AS \"Nom\",\n  s.step_type                  AS \"Type\",\n  s.status                     AS \"Statut\",\n  s.start_datetime             AS \"Début\",\n  s.end_datetime               AS \"Fin\",\n  EXTRACT(EPOCH FROM (s.end_datetime - s.start_datetime))::INT  AS \"Durée (s)\",\n  s.error_message              AS \"Erreur\",\n  s.source_step_ref            AS \"Ref Step\"\nFROM fact_execution_step s\nWHERE s.execution_id = $execution_id\n  AND UPPER(s.status) IN ('FAILED', 'FAILURE')\nORDER BY s.start_datetime ASC",
+                        "sql": {
+                          "columns": [
+                            {
+                              "parameters": [],
+                              "type": "function"
+                            }
+                          ],
+                          "groupBy": [
+                            {
+                              "property": {
+                                "type": "string"
+                              },
+                              "type": "groupBy"
+                            }
+                          ],
+                          "limit": 50
+                        }
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.1.0",
+            "spec": {
+              "options": {
+                "cellHeight": "sm",
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": true,
+                    "displayName": "Niveau"
+                  }
+                ]
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "filterable": true,
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Statut"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "mode": "gradient",
+                          "type": "color-background"
+                        }
+                      },
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "options": {
+                              "FAILED": {
+                                "color": "red",
+                                "index": 1,
+                                "text": "FAILED"
+                              },
+                              "FAILURE": {
+                                "color": "dark-red",
+                                "index": 3,
+                                "text": "FAILURE"
+                              },
+                              "failed": {
+                                "color": "red",
+                                "index": 0,
+                                "text": "FAILED"
+                              },
+                              "failure": {
+                                "color": "dark-red",
+                                "index": 2,
+                                "text": "FAILURE"
+                              }
+                            },
+                            "type": "value"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Type"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "options": {
+                              "ACTION": {
+                                "color": "purple",
+                                "index": 1,
+                                "text": "Action"
+                              },
+                              "SUB_SESSION": {
+                                "color": "blue",
+                                "index": 0,
+                                "text": "Sous-session"
+                              }
+                            },
+                            "type": "value"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-text"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Début"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "dateTimeAsIso"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Fin"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "dateTimeAsIso"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Niveau"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "mode": "gradient",
+                          "type": "color-background"
+                        }
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "color": "blue",
+                              "value": 0
+                            },
+                            {
+                              "color": "purple",
+                              "value": 1
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "id": 5,
+          "title": "Toutes les sous-sessions de cette execution (contexte complet)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-postgresql-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "cfqvza7ykhudce"
+                      },
+                      "spec": {
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT\n  CASE\n    WHEN s.parent_step_id IS NULL THEN 'Sous-session'\n    ELSE 'Action'\n  END                          AS \"Type\",\n  s.source_step_ref,\n  s.step_name                  AS \"Nom\",\n  s.status                     AS \"Statut\",\n  s.start_datetime             AS \"Début\",\n  s.end_datetime               AS \"Fin\",\n  EXTRACT(EPOCH FROM (s.end_datetime - s.start_datetime))::INT  AS \"Durée (s)\",\n  s.error_message              AS \"Erreur\"\nFROM fact_execution_step s\nWHERE s.execution_id = $execution_id\nORDER BY s.start_datetime ASC",
+                        "sql": {
+                          "columns": [
+                            {
+                              "parameters": [],
+                              "type": "function"
+                            }
+                          ],
+                          "groupBy": [
+                            {
+                              "property": {
+                                "type": "string"
+                              },
+                              "type": "groupBy"
+                            }
+                          ],
+                          "limit": 50
+                        }
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.1.0",
+            "spec": {
+              "options": {
+                "cellHeight": "sm",
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": false,
+                    "displayName": "Début"
+                  }
+                ]
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "filterable": true,
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Début"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "dateTimeAsIso"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Fin"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "dateTimeAsIso"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "layout": {
+      "kind": "GridLayout",
+      "spec": {
+        "items": [
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 4,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-2"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 4,
+              "width": 24,
+              "height": 20,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-4"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 24,
+              "width": 24,
+              "height": 14,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-5"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "links": [
+      {
+        "title": "← Retour Executions",
+        "type": "link",
+        "icon": "arrow-left",
+        "tooltip": "",
+        "url": "/d/supervision-executions?var-interface_code=${interface_code}",
+        "tags": [],
+        "asDropdown": false,
+        "targetBlank": false,
+        "includeVars": true,
+        "keepTime": true
+      }
+    ],
+    "liveNow": false,
+    "preload": false,
+    "tags": [
+      "supervision",
+      "edi",
+      "failed"
+    ],
+    "timeSettings": {
+      "timezone": "browser",
+      "from": "2026-04-23T16:14:31.676Z",
+      "to": "2026-07-22T16:14:31.676Z",
+      "autoRefresh": "30s",
+      "autoRefreshIntervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ],
+      "hideTimepicker": false,
+      "fiscalYearStartMonth": 0
+    },
+    "title": "EDI — Sous-sessions FAILED par Execution",
+    "variables": [
+      {
+        "kind": "TextVariable",
+        "spec": {
+          "name": "execution_id",
+          "current": {
+            "text": "",
+            "value": ""
+          },
+          "query": "",
+          "label": "Execution ID",
+          "hide": "dontHide",
+          "skipUrlSync": false,
+          "description": "ID de l'execution (passé automatiquement depuis le dashboard Executions)"
+        }
+      },
+      {
+        "kind": "TextVariable",
+        "spec": {
+          "name": "interface_code",
+          "current": {
+            "text": "",
+            "value": ""
+          },
+          "query": "",
+          "label": "Interface",
+          "hide": "hideVariable",
+          "skipUrlSync": false,
+          "description": "Code interface pour le lien retour"
+        }
+      }
+    ]
+  }
+}

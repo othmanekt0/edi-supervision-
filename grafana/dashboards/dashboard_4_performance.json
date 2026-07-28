@@ -1,0 +1,76 @@
+{
+    "annotations": { "list": [{ "builtIn": 1, "datasource": { "type": "grafana", "uid": "-- Grafana --" }, "enable": true, "hide": true, "iconColor": "rgba(0, 211, 255, 1)", "name": "Annotations & Alerts", "type": "dashboard" }] },
+    "editable": true, "fiscalYearStartMonth": 0, "graphTooltip": 0, "id": null, "liveNow": false,
+    "links": [
+        { "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true, "tags": [], "targetBlank": false, "title": "🔴 Vue Interfaces en erreur", "tooltip": "Drill-down sur les interfaces FAILED", "type": "link", "url": "/d/supervision-interfaces1" },
+        { "asDropdown": true, "icon": "external link", "includeVars": false, "keepTime": true, "tags": ["supervision", "edi"], "targetBlank": false, "title": "Autres dashboards", "tooltip": "", "type": "dashboards" }
+    ],
+    "panels": [
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "fillOpacity": 80, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineWidth": 1, "scaleDistribution": { "type": "linear" }, "thresholdsStyle": { "mode": "off" } }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] }, "unit": "s" } },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }, "id": 1,
+            "options": { "barRadius": 0, "barWidth": 0.97, "fullHighlight": false, "groupWidth": 0.7, "legend": { "calcs": [], "displayMode": "list", "overflow": "ellipsis", "placement": "bottom", "showLegend": true }, "orientation": "horizontal", "showValue": "auto", "stacking": "none", "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }, "xTickLabelRotation": 0, "xTickLabelSpacing": 0 },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT\n  di.libelle AS \"Interface\",\n  ROUND(AVG(fe.duration_seconds)) AS \"Durée moy (sec)\",\n  ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY fe.duration_seconds)) AS \"P95 (sec)\"\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nWHERE fe.env_id = 3\n  AND fe.status NOT IN ('RUNNING')\n  AND fe.duration_seconds > 0\n  AND fe.start_datetime >= NOW() - INTERVAL '30 days'\nGROUP BY di.libelle\nORDER BY \"P95 (sec)\" DESC;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Durée moyenne et P95 par interface (30 jours)", "type": "barchart"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "description": "Historique insuffisant si moins de 2 semaines de données",
+            "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "barWidthFactor": 0.6, "drawStyle": "line", "fillOpacity": 0, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5, "scaleDistribution": { "type": "linear" }, "showPoints": "auto", "showValues": false, "spanNulls": false, "stacking": { "group": "A", "mode": "none" }, "thresholdsStyle": { "mode": "off" } }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] }, "unit": "s" } },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }, "id": 2,
+            "options": { "annotations": { "clustering": -1, "multiLane": false }, "legend": { "calcs": [], "displayMode": "list", "enableFacetedFilter": false, "overflow": "ellipsis", "placement": "bottom", "showLegend": true }, "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" } },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT\n  di.libelle,\n  DATE_TRUNC('week', fe.start_datetime) AS semaine,\n  ROUND(AVG(fe.duration_seconds)) AS duree_moy_sec\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nWHERE fe.env_id = 3\n  AND fe.status NOT IN ('RUNNING')\n  AND fe.duration_seconds > 0\nGROUP BY di.libelle, semaine\nORDER BY di.libelle, semaine;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Évolution durée par interface (hebdomadaire)", "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] }, "unit": "s" } },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }, "id": 3,
+            "options": { "cellHeight": "sm", "showHeader": true },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT\n  di.libelle,\n  fe.start_datetime,\n  fe.duration_seconds AS duree_reelle_sec,\n  ds.max_duration_sec AS sla_sec,\n  CASE WHEN fe.duration_seconds > ds.max_duration_sec THEN true ELSE false END AS depasse\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nJOIN dim_sla ds ON ds.interface_id = fe.interface_id\n  AND ds.actif_depuis <= fe.start_datetime::date\n  AND (ds.actif_jusqu_a IS NULL OR ds.actif_jusqu_a >= fe.start_datetime::date)\nWHERE fe.env_id = 3\n  AND fe.status NOT IN ('RUNNING')\n  AND fe.duration_seconds IS NOT NULL\n  AND fe.start_datetime >= NOW() - INTERVAL '30 days'\nORDER BY fe.start_datetime DESC;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Durée réelle vs SLA (30 jours)", "type": "table"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "description": "Airflow uniquement",
+            "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text", "axisLabel": "", "axisPlacement": "auto", "fillOpacity": 80, "gradientMode": "none", "hideFrom": { "legend": false, "tooltip": false, "viz": false }, "lineWidth": 1, "scaleDistribution": { "type": "linear" }, "thresholdsStyle": { "mode": "off" } }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] } } },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }, "id": 4,
+            "options": { "barRadius": 0, "barWidth": 0.97, "fullHighlight": false, "groupWidth": 0.7, "legend": { "calcs": [], "displayMode": "list", "overflow": "ellipsis", "placement": "bottom", "showLegend": true }, "orientation": "horizontal", "showValue": "auto", "stacking": "none", "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }, "xTickLabelRotation": 0, "xTickLabelSpacing": 0 },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT\n  di.libelle,\n  ROUND((AVG(fe.rows_written::float / NULLIF(fe.duration_seconds, 0)))::numeric, 1) AS debit_moy_lignes_sec\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nWHERE fe.env_id = 3\n  AND fe.source_id = 2\n  AND fe.rows_written IS NOT NULL\n  AND fe.duration_seconds > 0\n  AND fe.start_datetime >= NOW() - INTERVAL '30 days'\nGROUP BY di.libelle\nORDER BY debit_moy_lignes_sec DESC;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Débit moyen (30 jours)", "type": "barchart"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "description": "Airflow : server_name peut être composite (host1 | host2)",
+            "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] } } },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 }, "id": 5,
+            "options": { "cellHeight": "sm", "showHeader": true, "sortBy": [{ "desc": false, "displayName": "server_name" }] },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT server_name, COUNT(*) AS nb_running\nFROM fact_execution\nWHERE status = 'RUNNING'\n  AND env_id = 3\n  AND server_name IS NOT NULL\nGROUP BY server_name\nORDER BY nb_running DESC;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Charge serveur", "type": "table"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": { "defaults": { "color": { "fixedColor": "#ad46ff", "mode": "thresholds" }, "mappings": [{ "options": { "from": 0, "result": { "color": "orange", "index": 0, "text": "⚠️ Historique insuffisant" }, "to": 1 }, "type": "range" }, { "options": { "from": 2, "result": { "index": 1, "text": "✓ Historique suffisant" }, "to": 999 }, "type": "range" }], "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] } } },
+            "gridPos": { "h": 10, "w": 24, "x": 0, "y": 24 }, "id": 6,
+            "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "percentChangeColorMode": "standard", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT COUNT(DISTINCT DATE_TRUNC('week', start_datetime)) AS nb_semaines\nFROM fact_execution\nWHERE env_id = 3\n  AND status NOT IN ('RUNNING')\n  AND duration_seconds > 0", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "⚠️ Historique insuffisant (moins de 2 semaines de données)", "type": "stat"
+        }
+    ],
+    "preload": false, "refresh": "", "schemaVersion": 42,
+    "tags": ["supervision", "edi"],
+    "templating": { "list": [{ "allowCustomValue": true, "current": { "text": "1", "value": "1" }, "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "definition": "SELECT COUNT(DISTINCT DATE_TRUNC('week', start_datetime))\nFROM fact_execution\nWHERE env_id = 3\n  AND status NOT IN ('RUNNING')\n  AND duration_seconds > 0", "hide": 2, "includeAll": false, "multi": false, "name": "nb_semaines", "options": [], "query": { "dataset": "supervision", "editorMode": "code", "format": "table", "query": "SELECT COUNT(DISTINCT DATE_TRUNC('week', start_datetime))\nFROM fact_execution\nWHERE env_id = 3\n  AND status NOT IN ('RUNNING')\n  AND duration_seconds > 0", "rawQuery": true, "rawSql": "SELECT COUNT(DISTINCT DATE_TRUNC('week', start_datetime))\nFROM fact_execution\nWHERE env_id = 3\n  AND status NOT IN ('RUNNING')\n  AND duration_seconds > 0", "refId": "SQLVariableQueryEditor-VariableQuery", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }, "refresh": 1, "regex": "", "regexApplyTo": "value", "skipUrlSync": false, "sort": 0, "type": "query" }] },
+    "time": { "from": "now-6h", "to": "now" },
+    "timepicker": { "refresh_intervals": ["5s","10s","30s","1m","5m","15m","30m","1h","2h","1d"] },
+    "timezone": "browser",
+    "title": "Performance",
+    "uid": "add5c26",
+    "version": 5
+}

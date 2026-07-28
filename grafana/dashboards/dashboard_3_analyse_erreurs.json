@@ -1,0 +1,105 @@
+{
+    "annotations": { "list": [{ "builtIn": 1, "datasource": { "type": "grafana", "uid": "-- Grafana --" }, "enable": true, "hide": true, "iconColor": "rgba(0, 211, 255, 1)", "name": "Annotations & Alerts", "type": "dashboard" }] },
+    "editable": true, "fiscalYearStartMonth": 0, "graphTooltip": 0, "id": null, "liveNow": false,
+    "links": [
+        { "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true, "tags": [], "targetBlank": false, "title": "🔴 Vue Interfaces en erreur", "tooltip": "Drill-down sur les interfaces FAILED", "type": "link", "url": "/d/supervision-interfaces1" },
+        { "asDropdown": true, "icon": "external link", "includeVars": false, "keepTime": true, "tags": ["supervision", "edi"], "targetBlank": false, "title": "Autres dashboards", "tooltip": "", "type": "dashboards" }
+    ],
+    "panels": [
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "description": "Airflow uniquement — error_code toujours NULL côté Stambia",
+            "fieldConfig": { "defaults": { "color": { "fixedColor": "#73BF69", "mode": "palette-classic" }, "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } } } },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }, "id": 1,
+            "options": { "displayLabels": ["name"], "legend": { "displayMode": "table", "overflow": "ellipsis", "placement": "bottom", "showLegend": true }, "pieType": "pie", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "sort": "desc", "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" } },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT error_code AS \"metric\", COUNT(*) AS \"value\"\nFROM fact_execution\nWHERE status = 'FAILURE'\n  AND env_id = 3\n  AND source_id = 2\n  AND error_code IS NOT NULL\n  AND start_datetime >= NOW() - INTERVAL '30 days'\nGROUP BY error_code\nORDER BY \"value\" DESC;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Répartition erreurs Airflow (30 jours)",
+            "transformations": [{ "id": "partitionByValues", "options": { "fields": ["metric"], "keepFields": false } }],
+            "type": "piechart"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "description": "Stambia uniquement — basé sur le message brut",
+            "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] } } },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }, "id": 2,
+            "options": { "cellHeight": "sm", "showHeader": true },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT \n  LEFT(error_message, 80) AS \"Message\",\n  COUNT(*) AS \"Nombre\"\nFROM fact_execution\nWHERE status = 'FAILURE'\n  AND env_id = 3\n  AND source_id = 1\n  AND error_message IS NOT NULL\n  AND start_datetime >= NOW() - INTERVAL '30 days'\nGROUP BY error_message\nORDER BY \"Nombre\" DESC\nLIMIT 10;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Top 10 erreurs Stambia (30 jours)",
+            "type": "table"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] } }, "overrides": [{ "matcher": { "id": "byName", "options": "Message", "scope": "series" }, "properties": [{ "id": "custom.cellOptions", "value": { "type": "auto" } }] }] },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }, "id": 3,
+            "options": { "cellHeight": "sm", "showHeader": true },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT\n  LEFT(error_message, 120) AS \"Message\",\n  COUNT(*) AS \"Nombre\"\nFROM fact_execution\nWHERE status = 'FAILURE'\n  AND env_id = 3\n  AND error_message IS NOT NULL\n  AND start_datetime >= NOW() - INTERVAL '30 days'\nGROUP BY error_message\nORDER BY \"Nombre\" DESC\nLIMIT 10;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Top 10 messages d'erreur (30 jours)",
+            "type": "table"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "description": "Les résolutions auto J+7 gonflent mécaniquement la moyenne",
+            "fieldConfig": { "defaults": { "color": { "fixedColor": "#ad46ff", "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] }, "unit": "h" } },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }, "id": 4,
+            "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "percentChangeColorMode": "standard", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT\n  ROUND(AVG(EXTRACT(EPOCH FROM (resolved_at - triggered_at)) / 3600), 1) AS \"Durée moy (heures)\",\n  COUNT(*) FILTER (WHERE resolved_at - triggered_at > INTERVAL '6 days 23 hours') AS \"Résolues auto J+7\",\n  COUNT(*) FILTER (WHERE resolved_at - triggered_at <= INTERVAL '6 days 23 hours') AS \"Résolues manuellement\"\nFROM fact_alert\nWHERE resolved_at IS NOT NULL\n  AND triggered_at >= NOW() - INTERVAL '30 days';", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Temps moyen de résolution (30 jours)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "description": "Airflow uniquement",
+            "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": 0 }, { "color": "orange", "value": 80 }, { "color": "green", "value": 95 }] }, "unit": "percent" } },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 }, "id": 5,
+            "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "percentChangeColorMode": "standard", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showPercentChange": false, "textMode": "auto", "wideLayout": true },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT\n  ROUND(\n    COUNT(*) FILTER (WHERE status = 'SUCCESS') * 100.0\n    / NULLIF(COUNT(*), 0),\n  1) AS \"Taux succès après retry (%)\"\nFROM fact_execution\nWHERE retry_count > 0\n  AND env_id = 3\n  AND source_id = 2\n  AND start_datetime >= NOW() - INTERVAL '30 days';", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Taux de succès après retry (30 jours)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] } },
+                "overrides": [
+                    { "matcher": { "id": "byName", "options": "Taux échec (%)", "scope": "series" }, "properties": [{ "id": "custom.cellOptions", "value": { "applyToRow": false, "type": "color-background" } }, { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "orange", "value": 20 }, { "color": "red", "value": 50 }] } }] },
+                    { "matcher": { "id": "byName", "options": "Alerte répétée active", "scope": "series" }, "properties": [{ "id": "custom.cellOptions", "value": { "type": "color-background" } }, { "id": "mappings", "value": [{ "options": { "false": { "color": "green", "index": 1 }, "true": { "color": "red", "index": 0 } }, "type": "value" }] }] },
+                    {
+                        "matcher": { "id": "byName", "options": "Interface" },
+                        "properties": [
+                            {
+                                "id": "links",
+                                "value": [
+                                    {
+                                        "targetBlank": false,
+                                        "title": "Voir les exécutions FAILED",
+                                        "url": "/d/supervision-interfaces1?from=${__from}&to=${__to}"
+                                    }
+                                ]
+                            },
+                            { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 }, "id": 6,
+            "options": { "cellHeight": "sm", "showHeader": true },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT\n  di.libelle AS \"Interface\",\n  COUNT(*) FILTER (WHERE fe.status = 'FAILURE') AS \"Échecs\",\n  COUNT(*) AS \"Total\",\n  ROUND(COUNT(*) FILTER (WHERE fe.status = 'FAILURE') * 100.0 / COUNT(*), 1) AS \"Taux échec (%)\",\n  EXISTS (\n    SELECT 1 FROM fact_alert fa2\n    JOIN fact_execution fe2 ON fa2.execution_id = fe2.execution_id\n    WHERE fe2.interface_id = fe.interface_id\n      AND fa2.alert_type = 'REPEATED_FAILURE'\n      AND fa2.resolved_at IS NULL\n  ) AS \"Alerte répétée active\"\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nWHERE fe.env_id = 3\n  AND fe.start_datetime >= NOW() - INTERVAL '30 days'\nGROUP BY di.libelle, fe.interface_id\nORDER BY \"Échecs\" DESC\nLIMIT 10;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Top 10 interfaces problématiques — cliquer pour drill-down",
+            "type": "table"
+        }
+    ],
+    "preload": false, "refresh": "", "schemaVersion": 42,
+    "tags": ["supervision", "edi"],
+    "time": { "from": "now-6h", "to": "now" },
+    "timepicker": { "refresh_intervals": ["5s","10s","30s","1m","5m","15m","30m","1h","2h","1d"] },
+    "timezone": "browser",
+    "title": "Analyse des erreurs",
+    "uid": "ad9mq2z",
+    "version": 3
+}

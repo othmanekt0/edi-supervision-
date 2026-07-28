@@ -1,0 +1,76 @@
+{
+    "annotations": { "list": [{ "builtIn": 1, "datasource": { "type": "grafana", "uid": "-- Grafana --" }, "enable": true, "hide": true, "iconColor": "rgba(0, 211, 255, 1)", "name": "Annotations & Alerts", "type": "dashboard" }] },
+    "editable": true, "fiscalYearStartMonth": 0, "graphTooltip": 0, "id": null, "liveNow": false,
+    "links": [
+        { "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true, "tags": [], "targetBlank": false, "title": "🔴 Vue Interfaces en erreur", "tooltip": "Drill-down sur les interfaces FAILED", "type": "link", "url": "/d/supervision-interfaces1" },
+        { "asDropdown": true, "icon": "external link", "includeVars": false, "keepTime": true, "tags": ["supervision", "edi"], "targetBlank": false, "title": "Autres dashboards", "tooltip": "", "type": "dashboards" }
+    ],
+    "panels": [
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "orange", "value": 95 }, { "color": "green", "value": 99 }] }, "unit": "percent" }, "overrides": [{ "matcher": { "id": "byName", "options": "taux_sla_pct", "scope": "series" }, "properties": [{ "id": "custom.cellOptions", "value": { "type": "color-background" } }] }] },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }, "id": 1,
+            "options": { "cellHeight": "sm", "showHeader": true },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT\n  dc.nom AS client,\n  ROUND(\n    (1 - COUNT(fa.alert_id) * 1.0\n         / NULLIF(COUNT(DISTINCT fe.execution_id), 0)\n    ) * 100, 1\n  ) AS taux_sla_pct\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nJOIN dim_client dc USING (client_id)\nLEFT JOIN fact_alert fa\n  ON fa.execution_id = fe.execution_id\n  AND fa.alert_type IN ('SLA_BREACH', 'TIMEOUT')\nWHERE fe.env_id = 3\n  AND $__timeFilter(fe.start_datetime)\nGROUP BY dc.nom\nORDER BY taux_sla_pct ASC;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Taux de SLA respectés par client", "type": "table"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] } } },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }, "id": 2,
+            "options": { "cellHeight": "sm", "showHeader": true },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT\n  dc.nom AS client,\n  di.libelle AS interface,\n  fe.start_datetime,\n  fe.duration_seconds,\n  ds.max_duration_sec AS sla_sec,\n  fa.alert_type,\n  fa.message\nFROM fact_alert fa\nJOIN fact_execution fe USING (execution_id)\nJOIN dim_interface di ON fe.interface_id = di.interface_id\nJOIN dim_client dc ON di.client_id = dc.client_id\nJOIN dim_sla ds ON ds.interface_id = di.interface_id\n  AND ds.actif_depuis <= fe.start_datetime::date\n  AND (ds.actif_jusqu_a IS NULL OR ds.actif_jusqu_a >= fe.start_datetime::date)\nWHERE fa.alert_type IN ('SLA_BREACH', 'TIMEOUT')\n  AND fe.env_id = 3\n  AND $__timeFilter(fe.start_datetime)\nORDER BY fe.start_datetime DESC;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Dépassements SLA sur la période", "type": "table"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] } },
+                "overrides": [
+                    { "matcher": { "id": "byName", "options": "severity", "scope": "series" }, "properties": [{ "id": "custom.cellOptions", "value": { "type": "color-background" } }, { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] } }, { "id": "mappings", "value": [{ "options": { "CRITICAL": { "color": "red", "index": 3 }, "HIGH": { "color": "orange", "index": 2 }, "LOW": { "color": "green", "index": 0 }, "MEDIUM": { "color": "yellow", "index": 1 } }, "type": "value" }] }] },
+                    {
+                        "matcher": { "id": "byName", "options": "interface" },
+                        "properties": [
+                            {
+                                "id": "links",
+                                "value": [
+                                    {
+                                        "targetBlank": false,
+                                        "title": "Voir les exécutions FAILED",
+                                        "url": "/d/supervision-interfaces1?from=${__from}&to=${__to}"
+                                    }
+                                ]
+                            },
+                            { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }, "id": 3,
+            "options": { "cellHeight": "sm", "showHeader": true },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT DISTINCT\n  di.libelle AS interface,\n  dc.nom AS client,\n  fa.alert_type,\n  fa.severity,\n  fa.triggered_at,\n  fa.message\nFROM fact_alert fa\nJOIN fact_execution fe USING (execution_id)\nJOIN dim_interface di ON fe.interface_id = di.interface_id\nJOIN dim_client dc ON di.client_id = dc.client_id\nWHERE fa.alert_type IN (\n    'SLA_BREACH', 'TIMEOUT',\n    'DAG_NOT_TRIGGERED', 'SESSION_NOT_TRIGGERED'\n  )\n  AND fa.resolved_at IS NULL\n  AND fe.env_id = 3\nORDER BY fa.severity DESC, fa.triggered_at DESC;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Interfaces en alerte SLA active — cliquer pour drill-down", "type": "table"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] } } },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }, "id": 4,
+            "options": { "cellHeight": "sm", "showHeader": true },
+            "pluginVersion": "13.1.0",
+            "targets": [{ "dataset": "supervision", "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" }, "editorMode": "code", "format": "table", "rawQuery": true, "rawSql": "SELECT\n  dc.nom AS client,\n  di.libelle AS interface,\n  fe.source_execution_ref,\n  fe.start_datetime,\n  fe.end_datetime,\n  fe.duration_seconds,\n  fe.status,\n  fa.alert_type AS alerte_sla,\n  fa.message AS detail_alerte\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nJOIN dim_client dc USING (client_id)\nLEFT JOIN fact_alert fa\n  ON fa.execution_id = fe.execution_id\n  AND fa.alert_type IN ('SLA_BREACH', 'TIMEOUT')\nWHERE fe.env_id = 3\n  AND DATE_TRUNC('month', fe.start_datetime) = DATE_TRUNC('month', '$mois_ref'::date)\nORDER BY dc.nom, fe.start_datetime;", "refId": "A", "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 } }],
+            "title": "Historique consolidé export mensuel", "type": "table"
+        }
+    ],
+    "preload": false, "refresh": "", "schemaVersion": 42,
+    "tags": ["supervision", "edi"],
+    "templating": { "list": [{ "allowCustomValue": true, "current": { "text": "2026-07-01", "value": "Juillet 2026" }, "hide": 0, "includeAll": false, "label": "Mois de référence", "multi": false, "name": "mois_ref", "options": [], "query": "2026-07-01,2026-06-01,2026-05-01", "skipUrlSync": false, "type": "custom", "valuesFormat": "csv" }] },
+    "time": { "from": "2026-07-19T21:00:00.000Z", "to": "2026-07-20T03:00:00.000Z" },
+    "timepicker": { "refresh_intervals": ["5s","10s","30s","1m","5m","15m","30m","1h","2h","1d"] },
+    "timezone": "browser",
+    "title": "SLA et engagement contractuel",
+    "uid": "adwn2hz",
+    "version": 6
+}

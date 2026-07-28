@@ -1,0 +1,330 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+                "enable": true, "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts", "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": null,
+    "liveNow": false,
+    "links": [
+        {
+            "asDropdown": false, "icon": "external link", "includeVars": false, "keepTime": true,
+            "tags": [], "targetBlank": false,
+            "title": "🔴 Vue Interfaces en erreur",
+            "tooltip": "Drill-down sur les interfaces FAILED",
+            "type": "link",
+            "url": "/d/supervision-interfaces1"
+        },
+        {
+            "asDropdown": true, "icon": "external link", "includeVars": false, "keepTime": true,
+            "tags": ["supervision", "edi"], "targetBlank": false,
+            "title": "Autres dashboards", "tooltip": "", "type": "dashboards"
+        }
+    ],
+    "panels": [
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false },
+                    "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] }
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+            "id": 1,
+            "options": { "cellHeight": "sm", "showHeader": true },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT\n  dc.nom AS \"Client\",\n  dc.contact_email AS \"Email\",\n  COUNT(di.interface_id) FILTER (WHERE di.actif) AS \"Interfaces actives\"\nFROM dim_client dc\nLEFT JOIN dim_interface di USING (client_id)\nWHERE dc.nom = '${client_id}'\nGROUP BY dc.nom, dc.contact_email;",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "Fiche client",
+            "type": "table"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "fixedColor": "#ad46ff", "mode": "thresholds" },
+                    "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] }
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+            "id": 2,
+            "options": {
+                "colorMode": "background", "graphMode": "none", "justifyMode": "auto",
+                "orientation": "auto", "percentChangeColorMode": "standard",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "showPercentChange": false, "textMode": "auto", "wideLayout": true
+            },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT COUNT(*) AS \"Exécutions\"\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nJOIN dim_client dc USING (client_id)\nWHERE dc.nom = '${client_id}'\n  AND fe.env_id = 3\n  AND fe.start_datetime >= NOW() - INTERVAL '30 days';",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "Exécutions (30 jours)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": 0 }, { "color": "orange", "value": 80 }, { "color": "green", "value": 90 }] },
+                    "unit": "percent"
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+            "id": 3,
+            "options": {
+                "colorMode": "value", "graphMode": "area", "justifyMode": "auto",
+                "orientation": "auto", "percentChangeColorMode": "standard",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "showPercentChange": false, "textMode": "auto", "wideLayout": true
+            },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT\n  ROUND(\n    COUNT(*) FILTER (WHERE fe.status = 'SUCCESS') * 100.0\n    / NULLIF(COUNT(*) FILTER (WHERE fe.status IN ('SUCCESS','FAILURE','WARNING','KILLED')), 0),\n  1) AS \"Taux de succès (%)\"\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nJOIN dim_client dc USING (client_id)\nWHERE dc.nom = '${client_id}'\n  AND fe.env_id = 3\n  AND fe.start_datetime >= NOW() - INTERVAL '30 days';",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "Taux de succès (30 jours)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": 0 }, { "color": "orange", "value": 80 }, { "color": "green", "value": 95 }] },
+                    "unit": "percent"
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+            "id": 4,
+            "options": {
+                "colorMode": "value", "graphMode": "area", "justifyMode": "auto",
+                "orientation": "auto", "percentChangeColorMode": "standard",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "showPercentChange": false, "textMode": "auto", "wideLayout": true
+            },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT\n  ROUND(\n    (1 - COUNT(fa.alert_id) * 1.0\n         / NULLIF(COUNT(DISTINCT fe.execution_id), 0)\n    ) * 100, 1\n  ) AS \"SLA respecté (%)\"\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nJOIN dim_client dc USING (client_id)\nLEFT JOIN fact_alert fa\n  ON fa.execution_id = fe.execution_id\n  AND fa.alert_type IN ('SLA_BREACH', 'TIMEOUT')\nWHERE dc.nom = '${client_id}'\n  AND fe.env_id = 3\n  AND fe.start_datetime >= NOW() - INTERVAL '30 days';",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "SLA respecté (30 jours)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "description": "Airflow uniquement",
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] },
+                    "unit": "short"
+                }
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+            "id": 5,
+            "options": {
+                "colorMode": "value", "graphMode": "area", "justifyMode": "auto",
+                "orientation": "auto", "percentChangeColorMode": "standard",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "showPercentChange": false, "textMode": "auto", "wideLayout": true
+            },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT COALESCE(SUM(fe.rows_written), 0) AS \"Lignes écrites\"\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nJOIN dim_client dc USING (client_id)\nWHERE dc.nom = '${client_id}'\n  AND fe.env_id = 3\n  AND fe.source_id = 2\n  AND fe.start_datetime >= NOW() - INTERVAL '30 days';",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "Volumétrie (30 jours)",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false },
+                    "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] }
+                },
+                "overrides": [
+                    {
+                        "matcher": { "id": "byName", "options": "Statut", "scope": "series" },
+                        "properties": [
+                            { "id": "custom.cellOptions", "value": { "applyToRow": false, "mode": "gradient", "type": "color-background" } },
+                            {
+                                "id": "mappings",
+                                "value": [
+                                    {
+                                        "options": {
+                                            "FAILURE": { "color": "red", "index": 1 },
+                                            "KILLED": { "color": "dark-red", "index": 4 },
+                                            "RUNNING": { "color": "blue", "index": 2 },
+                                            "SUCCESS": { "color": "green", "index": 0 },
+                                            "WARNING": { "color": "orange", "index": 3 }
+                                        },
+                                        "type": "value"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": { "id": "byName", "options": "Référence" },
+                        "properties": [
+                            {
+                                "id": "links",
+                                "value": [
+                                    {
+                                        "targetBlank": false,
+                                        "title": "Voir les sous-sessions",
+                                        "url": "/d/supervision-steps?var-execution_id=${__data.fields[\"execution_id\"]}&var-interface_code=${__data.fields[\"Interface\"]}&from=${__from}&to=${__to}"
+                                    }
+                                ]
+                            },
+                            { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+            "id": 6,
+            "options": { "cellHeight": "sm", "showHeader": true },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT \n  fe.execution_id,\n  di.code AS \"Interface\",\n  fe.source_execution_ref AS \"Référence\",\n  di.libelle AS \"Libellé interface\",\n  fe.status AS \"Statut\",\n  fe.start_datetime AS \"Début\",\n  fe.end_datetime AS \"Fin\",\n  fe.duration_seconds AS \"Durée (sec)\"\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nJOIN dim_client dc USING (client_id)\nWHERE dc.nom = '${client_id}'\n  AND fe.env_id = 3\nORDER BY fe.start_datetime DESC\nLIMIT 20;",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "20 dernières exécutions — cliquer sur Référence pour voir les steps",
+            "type": "table"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false },
+                    "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] }
+                },
+                "overrides": [
+                    {
+                        "matcher": { "id": "byName", "options": "Statut", "scope": "series" },
+                        "properties": [
+                            { "id": "custom.cellOptions", "value": { "type": "color-background" } },
+                            {
+                                "id": "mappings",
+                                "value": [
+                                    {
+                                        "options": {
+                                            "FAILURE": { "color": "red", "index": 1 },
+                                            "KILLED": { "color": "dark-red", "index": 4 },
+                                            "RUNNING": { "color": "blue", "index": 2 },
+                                            "SUCCESS": { "color": "green", "index": 0 },
+                                            "WARNING": { "color": "orange", "index": 3 }
+                                        },
+                                        "type": "value"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+            "id": 7,
+            "options": { "cellHeight": "sm", "showHeader": true },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT \n  fes.step_name AS \"Étape\",\n  fes.step_type AS \"Type\",\n  fes.status AS \"Statut\",\n  fes.start_datetime AS \"Début\",\n  fes.end_datetime AS \"Fin\",\n  fes.error_message AS \"Erreur\"\nFROM fact_execution_step fes\nJOIN fact_execution fe USING (execution_id)\nJOIN dim_interface di USING (interface_id)\nJOIN dim_client dc USING (client_id)\nWHERE dc.nom = '${client_id}'\n  AND fe.env_id = 3\nORDER BY fes.step_id DESC\nLIMIT 50;",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "Détail des étapes",
+            "type": "table"
+        }
+    ],
+    "preload": false,
+    "refresh": "",
+    "schemaVersion": 42,
+    "tags": ["supervision", "edi"],
+    "templating": {
+        "list": [
+            {
+                "allowCustomValue": true,
+                "current": { "text": "Client A", "value": "Client A" },
+                "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                "definition": "SELECT nom FROM dim_client ORDER BY nom;",
+                "hide": 0, "includeAll": false, "label": "Client", "multi": false, "name": "client_id",
+                "options": [],
+                "query": {
+                    "dataset": "supervision", "editorMode": "code", "format": "table",
+                    "query": "SELECT nom FROM dim_client ORDER BY nom;", "rawQuery": true,
+                    "rawSql": "SELECT nom FROM dim_client ORDER BY nom;",
+                    "refId": "SQLVariableQueryEditor-VariableQuery",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                },
+                "refresh": 1, "regex": "", "regexApplyTo": "value",
+                "skipUrlSync": false, "sort": 0, "type": "query"
+            }
+        ]
+    },
+    "time": { "from": "now-6h", "to": "now" },
+    "timepicker": { "refresh_intervals": ["5s","10s","30s","1m","5m","15m","30m","1h","2h","1d"] },
+    "timezone": "browser",
+    "title": "Vue par client",
+    "uid": "adm42sz",
+    "version": 5
+}

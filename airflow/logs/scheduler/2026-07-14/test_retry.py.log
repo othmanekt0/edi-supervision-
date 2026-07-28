@@ -1,0 +1,137 @@
+[2026-07-14T16:44:29.892+0000] {processor.py:161} INFO - Started process (PID=43) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:44:29.898+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:44:29.905+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:44:29.905+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:44:30.074+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:44:31.099+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:44:31.098+0000] {override.py:1858} INFO - Created Permission View: can read on DAG:test_retry
+[2026-07-14T16:44:31.131+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:44:31.130+0000] {override.py:1858} INFO - Created Permission View: can delete on DAG:test_retry
+[2026-07-14T16:44:31.153+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:44:31.152+0000] {override.py:1858} INFO - Created Permission View: can edit on DAG:test_retry
+[2026-07-14T16:44:31.157+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:44:31.156+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:44:31.201+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:44:31.201+0000] {dag.py:3111} INFO - Creating ORM DAG for test_retry
+[2026-07-14T16:44:31.209+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:44:31.205+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:44:31.349+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 1.475 seconds
+[2026-07-14T16:45:01.957+0000] {processor.py:161} INFO - Started process (PID=55) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:45:01.961+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:45:01.968+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:45:01.967+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:45:02.020+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:45:02.088+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:45:02.088+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:45:02.118+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:45:02.118+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:45:02.180+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.240 seconds
+[2026-07-14T16:45:33.071+0000] {processor.py:161} INFO - Started process (PID=67) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:45:33.175+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:45:33.257+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:45:33.257+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:45:33.456+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:45:33.911+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:45:33.910+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:45:33.973+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:45:33.973+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:45:34.073+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 1.035 seconds
+[2026-07-14T16:46:04.461+0000] {processor.py:161} INFO - Started process (PID=72) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:46:04.465+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:46:04.472+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:46:04.471+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:46:04.528+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:46:04.637+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:46:04.637+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:46:04.685+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:46:04.684+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:46:04.752+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.309 seconds
+[2026-07-14T16:46:35.169+0000] {processor.py:161} INFO - Started process (PID=84) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:46:35.176+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:46:35.191+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:46:35.189+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:46:35.278+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:46:35.391+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:46:35.390+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:46:35.444+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:46:35.443+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:46:35.502+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.352 seconds
+[2026-07-14T16:47:05.737+0000] {processor.py:161} INFO - Started process (PID=96) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:47:05.741+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:47:05.749+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:47:05.746+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:47:05.844+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:47:06.042+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:47:06.041+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:47:06.117+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:47:06.117+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:47:06.231+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.512 seconds
+[2026-07-14T16:47:36.519+0000] {processor.py:161} INFO - Started process (PID=108) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:47:36.533+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:47:36.556+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:47:36.555+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:47:36.755+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:47:37.564+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:47:37.563+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:47:37.691+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:47:37.690+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:47:37.769+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 1.289 seconds
+[2026-07-14T16:48:08.055+0000] {processor.py:161} INFO - Started process (PID=120) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:48:08.059+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:48:08.068+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:48:08.067+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:48:08.125+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:48:08.217+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:48:08.216+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:48:08.255+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:48:08.254+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:48:08.347+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.311 seconds
+[2026-07-14T16:48:38.583+0000] {processor.py:161} INFO - Started process (PID=125) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:48:38.593+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:48:38.601+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:48:38.600+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:48:38.658+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:48:38.728+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:48:38.727+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:48:38.774+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:48:38.773+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:48:38.856+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.296 seconds
+[2026-07-14T16:49:09.641+0000] {processor.py:161} INFO - Started process (PID=137) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:49:09.662+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:49:09.737+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:49:09.736+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:49:09.911+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:49:10.084+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:49:10.082+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:49:10.173+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:49:10.172+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:49:10.354+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.761 seconds
+[2026-07-14T16:49:42.383+0000] {processor.py:161} INFO - Started process (PID=149) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:49:42.388+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:49:42.397+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:49:42.395+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:49:42.506+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:49:42.741+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:49:42.740+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:49:42.861+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:49:42.860+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:49:43.203+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.850 seconds
+[2026-07-14T16:50:13.764+0000] {processor.py:161} INFO - Started process (PID=161) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:50:13.771+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:50:13.783+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:50:13.782+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:50:13.887+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:50:14.020+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:50:14.019+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:50:14.090+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:50:14.089+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:50:14.206+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.469 seconds
+[2026-07-14T16:50:45.027+0000] {processor.py:161} INFO - Started process (PID=166) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:50:45.034+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:50:45.055+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:50:45.053+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:50:45.226+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:50:45.332+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:50:45.331+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:50:45.377+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:50:45.376+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:50:45.452+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.472 seconds
+[2026-07-14T16:51:15.645+0000] {processor.py:161} INFO - Started process (PID=178) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:51:15.649+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:51:15.659+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:51:15.657+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:51:15.716+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:51:15.784+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:51:15.783+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:51:15.815+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:51:15.815+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:51:15.899+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.269 seconds
+[2026-07-14T16:51:46.218+0000] {processor.py:161} INFO - Started process (PID=190) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:51:46.225+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:51:46.235+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:51:46.234+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:51:46.326+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:51:46.456+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:51:46.456+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:51:46.504+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:51:46.503+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:51:46.572+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.377 seconds
+[2026-07-14T16:52:16.938+0000] {processor.py:161} INFO - Started process (PID=202) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:52:16.956+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:52:16.979+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:52:16.977+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:52:17.307+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:52:17.441+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:52:17.440+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:52:17.484+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:52:17.484+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:52:17.566+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.655 seconds
+[2026-07-14T16:52:47.779+0000] {processor.py:161} INFO - Started process (PID=214) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:52:47.785+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:52:47.796+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:52:47.795+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:52:47.858+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:52:47.962+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:52:47.961+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:52:48.012+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:52:48.012+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:52:48.111+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.361 seconds
+[2026-07-14T16:53:18.380+0000] {processor.py:161} INFO - Started process (PID=219) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:53:18.385+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:53:18.393+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:53:18.392+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:53:18.450+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:53:18.523+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:53:18.522+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:53:18.583+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:53:18.582+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:53:18.671+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.313 seconds
+[2026-07-14T16:53:49.450+0000] {processor.py:161} INFO - Started process (PID=231) to work on /opt/airflow/dags/test_retry.py
+[2026-07-14T16:53:49.454+0000] {processor.py:830} INFO - Processing file /opt/airflow/dags/test_retry.py for tasks to queue
+[2026-07-14T16:53:49.467+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:53:49.466+0000] {dagbag.py:545} INFO - Filling up the DagBag from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:53:49.563+0000] {processor.py:840} INFO - DAG(s) 'test_retry' retrieved from /opt/airflow/dags/test_retry.py
+[2026-07-14T16:53:49.705+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:53:49.704+0000] {dag.py:3089} INFO - Sync 1 DAGs
+[2026-07-14T16:53:49.797+0000] {logging_mixin.py:188} INFO - [2026-07-14T16:53:49.795+0000] {dag.py:3947} INFO - Setting next_dagrun for test_retry to None, run_after=None
+[2026-07-14T16:53:49.887+0000] {processor.py:183} INFO - Processing /opt/airflow/dags/test_retry.py took 0.471 seconds

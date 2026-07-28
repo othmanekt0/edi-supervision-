@@ -1,0 +1,470 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": null,
+    "liveNow": false,
+    "links": [
+        {
+            "asDropdown": false,
+            "icon": "external link",
+            "includeVars": false,
+            "keepTime": true,
+            "tags": [],
+            "targetBlank": false,
+            "title": "🔴 Vue Interfaces en erreur",
+            "tooltip": "Drill-down sur les interfaces FAILED",
+            "type": "link",
+            "url": "/d/supervision-interfaces1"
+        },
+        {
+            "asDropdown": true,
+            "icon": "external link",
+            "includeVars": false,
+            "keepTime": true,
+            "tags": ["supervision", "edi"],
+            "targetBlank": false,
+            "title": "Autres dashboards",
+            "tooltip": "",
+            "type": "dashboards"
+        }
+    ],
+    "panels": [
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "fixedColor": "#ad46ff", "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": 0 },
+                            { "color": "red", "value": 80 }
+                        ]
+                    }
+                }
+            },
+            "gridPos": { "h": 9, "w": 8, "x": 0, "y": 0 },
+            "id": 1,
+            "options": {
+                "colorMode": "background", "graphMode": "none", "justifyMode": "auto",
+                "orientation": "auto", "percentChangeColorMode": "standard",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "showPercentChange": false, "textMode": "auto", "wideLayout": true
+            },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT COUNT(*) FROM fact_execution\nWHERE status = 'RUNNING' AND env_id = 3;",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "Exécutions en cours",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "fixedColor": "#ad46ff", "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "red", "value": 0 },
+                            { "color": "orange", "value": 80 },
+                            { "color": "green", "value": 95 }
+                        ]
+                    },
+                    "unit": "percent"
+                }
+            },
+            "gridPos": { "h": 9, "w": 8, "x": 8, "y": 0 },
+            "id": 2,
+            "options": {
+                "colorMode": "background", "graphMode": "none", "justifyMode": "auto",
+                "orientation": "auto", "percentChangeColorMode": "standard",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "showPercentChange": false, "textMode": "auto", "wideLayout": true
+            },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT\n  ROUND(\n    COUNT(*) FILTER (WHERE status = 'SUCCESS') * 100.0\n    / NULLIF(COUNT(*) FILTER (WHERE status IN ('SUCCESS','FAILURE','WARNING','KILLED')), 0),\n  1) AS taux_succes_pct\nFROM fact_execution\nWHERE env_id = 3\n  AND start_datetime >= NOW() - INTERVAL '24 hours';",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "Taux de succès 24h",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "fixedColor": "#ad46ff", "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            { "color": "green", "value": 0 },
+                            { "color": "orange", "value": 1 },
+                            { "color": "red", "value": 5 }
+                        ]
+                    }
+                }
+            },
+            "gridPos": { "h": 9, "w": 8, "x": 16, "y": 0 },
+            "id": 3,
+            "links": [
+                {
+                    "targetBlank": false,
+                    "title": "Voir les interfaces en erreur",
+                    "url": "/d/supervision-interfaces1&from=${__from}&to=${__to}"
+                }
+            ],
+            "options": {
+                "colorMode": "background", "graphMode": "none", "justifyMode": "auto",
+                "orientation": "auto", "percentChangeColorMode": "standard",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "showPercentChange": false, "textMode": "auto", "wideLayout": true
+            },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "WITH derniere_exec AS (\n  SELECT DISTINCT ON (interface_id)\n    interface_id, status\n  FROM fact_execution\n  WHERE env_id = 3\n    AND interface_id IS NOT NULL\n  ORDER BY interface_id, start_datetime DESC\n)\nSELECT COUNT(*) FROM derniere_exec WHERE status = 'FAILURE';",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "Erreurs actives — cliquer pour drill-down",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text",
+                        "axisLabel": "", "axisPlacement": "auto", "fillOpacity": 80,
+                        "gradientMode": "none",
+                        "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+                        "lineWidth": 1,
+                        "scaleDistribution": { "type": "linear" },
+                        "thresholdsStyle": { "mode": "off" }
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }]
+                    }
+                }
+            },
+            "gridPos": { "h": 9, "w": 8, "x": 0, "y": 9 },
+            "id": 4,
+            "options": {
+                "barRadius": 0, "barWidth": 0.97, "fullHighlight": false, "groupWidth": 0.7,
+                "legend": { "calcs": [], "displayMode": "list", "overflow": "ellipsis", "placement": "bottom", "showLegend": true },
+                "orientation": "horizontal", "showValue": "auto", "stacking": "none",
+                "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" },
+                "xTickLabelRotation": 0, "xTickLabelSpacing": 0
+            },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT di.code AS \"Interface\", di.libelle AS \"Libelle\", COUNT(*) AS \"Échecs\"\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nWHERE fe.status = 'FAILURE'\n  AND fe.env_id = 3\n  AND fe.start_datetime >= NOW() - INTERVAL '24 hours'\nGROUP BY di.code, di.libelle\nORDER BY \"Échecs\" DESC\nLIMIT 5;",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": { "id": "byName", "options": "Libelle" },
+                        "properties": [
+                            {
+                                "id": "links",
+                                "value": [
+                                    {
+                                        "targetBlank": false,
+                                        "title": "Voir les exécutions FAILED",
+                                        "url": "/d/supervision-interfaces1?var-interface_code=${__data.fields[\"Interface\"]}&from=${__from}&to=${__to}"
+                                    }
+                                ]
+                            },
+                            { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+                        ]
+                    }
+                ]
+            },
+            "title": "Top 5 interfaces en échec (24h) — cliquer pour drill-down",
+            "type": "barchart"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "description": "Airflow uniquement",
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }]
+                    },
+                    "unit": "short"
+                }
+            },
+            "gridPos": { "h": 9, "w": 8, "x": 8, "y": 9 },
+            "id": 5,
+            "options": {
+                "colorMode": "value", "graphMode": "area", "justifyMode": "auto",
+                "orientation": "auto", "percentChangeColorMode": "standard",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "showPercentChange": false, "textMode": "auto", "wideLayout": true
+            },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT COALESCE(SUM(rows_written), 0) AS \"Lignes écrites\"\nFROM fact_execution\nWHERE env_id = 3\n  AND source_id = 2\n  AND start_datetime >= NOW() - INTERVAL '24 hours';",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "Volumétrie 24h",
+            "type": "stat"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text",
+                        "axisLabel": "", "axisPlacement": "auto", "fillOpacity": 80,
+                        "gradientMode": "none",
+                        "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+                        "lineWidth": 1,
+                        "scaleDistribution": { "type": "linear" },
+                        "thresholdsStyle": { "mode": "off" }
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }]
+                    },
+                    "unit": "s"
+                }
+            },
+            "gridPos": { "h": 9, "w": 8, "x": 16, "y": 9 },
+            "id": 6,
+            "options": {
+                "barRadius": 0, "barWidth": 0.97, "fullHighlight": false, "groupWidth": 0.7,
+                "legend": { "calcs": [], "displayMode": "list", "overflow": "ellipsis", "placement": "bottom", "showLegend": true },
+                "orientation": "horizontal", "showValue": "auto", "stacking": "none",
+                "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" },
+                "xTickLabelRotation": 0, "xTickLabelSpacing": 0
+            },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT di.libelle AS \"Interface\", ROUND(AVG(fe.duration_seconds)) AS \"Durée moy (sec)\"\nFROM fact_execution fe\nJOIN dim_interface di USING (interface_id)\nWHERE fe.env_id = 3\n  AND fe.status NOT IN ('RUNNING')\n  AND fe.duration_seconds > 0\n  AND fe.start_datetime >= NOW() - INTERVAL '24 hours'\nGROUP BY di.libelle\nORDER BY \"Durée moy (sec)\" DESC;",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "Durée moyenne par interface (24h)",
+            "type": "barchart"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "palette-classic" },
+                    "custom": {
+                        "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text",
+                        "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0,
+                        "barWidthFactor": 0.6, "drawStyle": "line", "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+                        "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1,
+                        "pointSize": 5, "scaleDistribution": { "type": "linear" },
+                        "showPoints": "auto", "showValues": false, "spanNulls": false,
+                        "stacking": { "group": "A", "mode": "normal" },
+                        "thresholdsStyle": { "mode": "off" }
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }]
+                    }
+                }
+            },
+            "gridPos": { "h": 9, "w": 8, "x": 0, "y": 18 },
+            "id": 7,
+            "options": {
+                "annotations": { "clustering": -1, "multiLane": false },
+                "legend": { "calcs": [], "displayMode": "list", "enableFacetedFilter": false, "overflow": "ellipsis", "placement": "bottom", "showLegend": true },
+                "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
+            },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT\n  DATE_TRUNC('hour', start_datetime) AS \"time\",\n  status AS \"metric\",\n  COUNT(*) AS \"value\"\nFROM fact_execution\nWHERE env_id = 3\n  AND start_datetime >= NOW() - INTERVAL '7 days'\nGROUP BY 1, 2\nORDER BY 1;",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "Activité par heure (7 jours)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "footer": { "reducers": [] }, "inspect": false },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": { "id": "byName", "options": "Sévérité", "scope": "series" },
+                        "properties": [
+                            { "id": "custom.cellOptions", "value": { "type": "color-background" } },
+                            {
+                                "id": "mappings",
+                                "value": [
+                                    {
+                                        "options": {
+                                            "CRITICAL": { "color": "red", "index": 0 },
+                                            "HIGH": { "color": "orange", "index": 1 },
+                                            "MEDIUM": { "color": "yellow", "index": 2 },
+                                            "LOW": { "color": "green", "index": 3 }
+                                        },
+                                        "type": "value"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": { "id": "byName", "options": "Interface" },
+                        "properties": [
+                            {
+                                "id": "links",
+                                "value": [
+                                    {
+                                        "targetBlank": false,
+                                        "title": "Voir les exécutions FAILED",
+                                        "url": "/d/supervision-interfaces1?from=${__from}&to=${__to}"
+                                    }
+                                ]
+                            },
+                            { "id": "custom.cellOptions", "value": { "type": "color-text" } }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": { "h": 9, "w": 8, "x": 8, "y": 18 },
+            "id": 8,
+            "options": { "cellHeight": "sm", "showHeader": true },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT \n  fa.alert_type AS \"Type\",\n  fa.severity AS \"Sévérité\",\n  di.libelle AS \"Interface\",\n  fa.message AS \"Message\",\n  fa.triggered_at AS \"Déclenchée le\"\nFROM fact_alert fa\nJOIN fact_execution fe USING (execution_id)\nLEFT JOIN dim_interface di ON fe.interface_id = di.interface_id\nWHERE fa.resolved_at IS NULL\nORDER BY\n  CASE fa.severity WHEN 'CRITICAL' THEN 1 WHEN 'HIGH' THEN 2 WHEN 'MEDIUM' THEN 3 ELSE 4 END,\n  fa.triggered_at DESC\nLIMIT 20;",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "Alertes actives — cliquer sur Interface pour drill-down",
+            "type": "table"
+        },
+        {
+            "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+            "fieldConfig": {
+                "defaults": {
+                    "color": { "mode": "thresholds" },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 1 }]
+                    }
+                }
+            },
+            "gridPos": { "h": 9, "w": 8, "x": 16, "y": 18 },
+            "id": 9,
+            "options": {
+                "colorMode": "value", "graphMode": "area", "justifyMode": "auto",
+                "orientation": "auto", "percentChangeColorMode": "standard",
+                "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+                "showPercentChange": false, "textMode": "auto", "wideLayout": true
+            },
+            "pluginVersion": "13.1.0",
+            "targets": [
+                {
+                    "dataset": "supervision",
+                    "datasource": { "type": "grafana-postgresql-datasource", "uid": "bfssjum1dvoqob" },
+                    "editorMode": "code", "format": "table", "rawQuery": true,
+                    "rawSql": "SELECT COUNT(*) AS \"Sans interface\"\nFROM fact_execution\nWHERE interface_id IS NULL\n  AND start_datetime >= NOW() - INTERVAL '24 hours';",
+                    "refId": "A",
+                    "sql": { "columns": [{ "parameters": [], "type": "function" }], "groupBy": [{ "property": { "type": "string" }, "type": "groupBy" }], "limit": 50 }
+                }
+            ],
+            "title": "KPI Qualité — exécutions sans interface",
+            "type": "stat"
+        }
+    ],
+    "preload": false,
+    "refresh": "",
+    "schemaVersion": 42,
+    "tags": ["supervision", "edi"],
+    "time": { "from": "now-6h", "to": "now" },
+    "timepicker": {
+        "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    },
+    "timezone": "browser",
+    "title": "Supervision temps réel (Ops)",
+    "uid": "adwvqvh",
+    "version": 13
+}
