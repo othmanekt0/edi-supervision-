@@ -168,7 +168,7 @@ CREATE INDEX idx_step_parent ON public.fact_execution_step USING btree (parent_s
 
 CREATE TABLE public.fact_alert (
                                    alert_id int8 DEFAULT nextval('fact_alert_seq'::regclass) NOT NULL,
-                                   execution_id int8 NOT NULL,
+                                   execution_id int8 NULL,
                                    alert_type varchar(50) NOT NULL,
                                    severity varchar(20) NULL,
                                    triggered_at timestamptz DEFAULT now() NOT NULL,
