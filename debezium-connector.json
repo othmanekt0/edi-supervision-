@@ -13,6 +13,7 @@
     "table.include.list": "log.stb_log_session_sess,log.stb_log_action_act,log.stb_log_delivery_dlv",
     "plugin.name": "pgoutput",
     "publication.autocreate.mode": "disabled",
+    "publication.name": "debezium_pub",
     "slot.name": "debezium_stambia_slot",
     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
