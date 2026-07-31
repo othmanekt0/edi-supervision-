@@ -13,6 +13,7 @@
     "table.include.list": "public.dag_run,public.task_instance,public.dag,public.sla_miss",
     "plugin.name": "pgoutput",
     "publication.autocreate.mode": "disabled",
+    "publication.name": "debezium_pub",
     "slot.name": "debezium_airflow_slot",
     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
