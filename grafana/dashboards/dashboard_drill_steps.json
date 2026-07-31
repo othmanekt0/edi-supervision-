@@ -13,7 +13,7 @@
     },
     "annotations": {
       "grafana.app/createdBy": "user:dfqvz3nvoyx34d",
-      "grafana.app/folder": "bfssfjhjmppmof",
+      "grafana.app/folder": "eftr8ntcz2yv4f",
       "grafana.app/saved-from-ui": "Grafana v13.1.0 (b309c9bb3b)",
       "grafana.app/updatedBy": "user:dfqvz3nvoyx34d",
       "grafana.app/updatedTimestamp": "2026-07-22T18:00:23Z",
@@ -44,7 +44,7 @@
       }
     ],
     "cursorSync": "Off",
-    "description": "Sous-sessions FAILED ou FAILURE pour une execution donnee — drill-down depuis le dashboard Executions",
+    "description": "Sous-sessions FAILED ou FAILURE pour une execution donnee â€” drill-down depuis le dashboard Executions",
     "editable": true,
     "elements": {
       "panel-2": {
@@ -151,7 +151,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\n  CASE\n    WHEN s.parent_step_id IS NULL THEN 0\n    ELSE 1\n  END                          AS \"Niveau\",\n  s.step_name                  AS \"Nom\",\n  s.step_type                  AS \"Type\",\n  s.status                     AS \"Statut\",\n  s.start_datetime             AS \"Début\",\n  s.end_datetime               AS \"Fin\",\n  EXTRACT(EPOCH FROM (s.end_datetime - s.start_datetime))::INT  AS \"Durée (s)\",\n  s.error_message              AS \"Erreur\",\n  s.source_step_ref            AS \"Ref Step\"\nFROM fact_execution_step s\nWHERE s.execution_id = $execution_id\n  AND UPPER(s.status) IN ('FAILED', 'FAILURE')\nORDER BY s.start_datetime ASC",
+                        "rawSql": "SELECT\n  CASE\n    WHEN s.parent_step_id IS NULL THEN 0\n    ELSE 1\n  END                          AS \"Niveau\",\n  s.step_name                  AS \"Nom\",\n  s.step_type                  AS \"Type\",\n  s.status                     AS \"Statut\",\n  s.start_datetime             AS \"DÃ©but\",\n  s.end_datetime               AS \"Fin\",\n  EXTRACT(EPOCH FROM (s.end_datetime - s.start_datetime))::INT  AS \"DurÃ©e (s)\",\n  s.error_message              AS \"Erreur\",\n  s.source_step_ref            AS \"Ref Step\"\nFROM fact_execution_step s\nWHERE s.execution_id = $execution_id\n  AND UPPER(s.status) IN ('FAILED', 'FAILURE')\nORDER BY s.start_datetime ASC",
                         "sql": {
                           "columns": [
                             {
@@ -301,7 +301,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Début"
+                      "options": "DÃ©but"
                     },
                     "properties": [
                       {
@@ -384,7 +384,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\n  CASE\n    WHEN s.parent_step_id IS NULL THEN 'Sous-session'\n    ELSE 'Action'\n  END                          AS \"Type\",\n  s.source_step_ref,\n  s.step_name                  AS \"Nom\",\n  s.status                     AS \"Statut\",\n  s.start_datetime             AS \"Début\",\n  s.end_datetime               AS \"Fin\",\n  EXTRACT(EPOCH FROM (s.end_datetime - s.start_datetime))::INT  AS \"Durée (s)\",\n  s.error_message              AS \"Erreur\"\nFROM fact_execution_step s\nWHERE s.execution_id = $execution_id\nORDER BY s.start_datetime ASC",
+                        "rawSql": "SELECT\n  CASE\n    WHEN s.parent_step_id IS NULL THEN 'Sous-session'\n    ELSE 'Action'\n  END                          AS \"Type\",\n  s.source_step_ref,\n  s.step_name                  AS \"Nom\",\n  s.status                     AS \"Statut\",\n  s.start_datetime             AS \"DÃ©but\",\n  s.end_datetime               AS \"Fin\",\n  EXTRACT(EPOCH FROM (s.end_datetime - s.start_datetime))::INT  AS \"DurÃ©e (s)\",\n  s.error_message              AS \"Erreur\"\nFROM fact_execution_step s\nWHERE s.execution_id = $execution_id\nORDER BY s.start_datetime ASC",
                         "sql": {
                           "columns": [
                             {
@@ -424,7 +424,7 @@
                 "sortBy": [
                   {
                     "desc": false,
-                    "displayName": "Début"
+                    "displayName": "DÃ©but"
                   }
                 ]
               },
@@ -459,7 +459,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Début"
+                      "options": "DÃ©but"
                     },
                     "properties": [
                       {
@@ -535,7 +535,7 @@
     },
     "links": [
       {
-        "title": "← Retour Executions",
+        "title": "â† Retour Executions",
         "type": "link",
         "icon": "arrow-left",
         "tooltip": "",
@@ -574,7 +574,7 @@
       "hideTimepicker": false,
       "fiscalYearStartMonth": 0
     },
-    "title": "EDI — Sous-sessions FAILED par Execution",
+    "title": "EDI â€” Sous-sessions FAILED par Execution",
     "variables": [
       {
         "kind": "TextVariable",
@@ -588,7 +588,7 @@
           "label": "Execution ID",
           "hide": "dontHide",
           "skipUrlSync": false,
-          "description": "ID de l'execution (passé automatiquement depuis le dashboard Executions)"
+          "description": "ID de l'execution (passÃ© automatiquement depuis le dashboard Executions)"
         }
       },
       {
@@ -609,3 +609,4 @@
     ]
   }
 }
+
