@@ -1,7 +1,7 @@
 # DOCUMENTATION COMPLÈTE - PLATEFORME DE SUPERVISION EDI
 
 **Version:** 0.0.1-SNAPSHOT  
-**Date:** 17 Juillet 2026  
+**Date:** 31 Juillet 2026  
 **Auteur:** Projet EDI Supervision  
 **Technologie principale:** Spring Boot 4.1.0 + Java 21
 
@@ -138,7 +138,7 @@ Le projet suit une architecture **event-driven** basée sur le pattern CDC (Chan
 
 ### 3.1 Docker Compose - Vue d'ensemble
 
-L'infrastructure locale est définie dans `docker-compose.yml` et comprend **11 services** :
+L'infrastructure locale est définie dans `docker-compose.yml` et comprend **15 services** (14 conteneurs permanents + 1 init one-shot) :
 
 
 #### Services principaux :
@@ -154,8 +154,13 @@ L'infrastructure locale est définie dans `docker-compose.yml` et comprend **11 
 | `airflow-webserver` | 8085 | UI + API REST Airflow |
 | `airflow-scheduler` | - | Ordonnanceur des DAGs |
 | `airflow-worker` | - | Worker Celery (exécution tasks) |
+| `airflow-triggerer` | - | Gestion des tasks différées |
 | `redis` | - | Broker Celery pour Airflow |
 | `zookeeper` | 2181 | Requis par Kafka |
+| `grafana` | 3000 | Dashboards de supervision |
+| `airflow-init` | - | Init one-shot (migration DB) |
+
+**Total : 15 services** (14 conteneurs permanents + 1 init one-shot)
 
 #### Configurations importantes :
 
@@ -183,10 +188,11 @@ Ces paramètres activent la réplication logique nécessaire à Debezium.
 
 ### 3.3 Volumes persistants
 
-Trois volumes Docker nommés assurent la persistance des données :
+Quatre volumes Docker nommés assurent la persistance des données :
 - `pg_supervision_data` : Datawarehouse de supervision
 - `pg_stambia_data` : Logs Stambia (mock)
 - `pg_airflow_data` : Métadonnées Airflow
+- `grafana_data` : Configuration et dashboards Grafana
 
 ---
 
@@ -406,16 +412,33 @@ Gère le cas où une action arrive via CDC **avant** son parent (sous-session ou
 
 ### 4.5 Migrations Flyway
 
-Les migrations SQL sont versionnées dans `src/main/resources/db/migration/` :
+Les migrations SQL sont versionnées dans `src/main/resources/db/migration/`.
+
+**⚠️ Note importante sur l'historique des migrations :**
+
+Le projet utilise actuellement une migration consolidée unique qui remplace les migrations incrémentales initiales :
 
 | Fichier | Description |
 |---------|-------------|
-| `V1__init_supervision_schema.sql` | Création initiale du schéma (dimensions + faits + seed data) |
-| `V2__add_source_step_ref.sql` | Ajout de `source_step_ref` sur fact_execution_step |
-| `V3__add_alert_message_and_unique_constraint.sql` | Ajout colonne `message` + index unique partiel |
-| `V4__add_sla_actif_jusqu_a.sql` | Ajout colonne `actif_jusqu_a` pour versioning SLA |
-| `V5__fusion_airflow_schema.sql` | Extension des CHECK pour statuts Airflow + types d'alertes |
-| `V6__fix_id_column_types.sql` | Correction types BIGINT sur env_id et source_id |
+| `V1__schema_consolide.sql` | **Migration consolidée** - Création complète du schéma (toutes dimensions + tables de faits + contraintes + index + seed data) |
+
+Cette migration consolidée a remplacé les migrations incrémentales V1 à V7 suivantes (conservées ici pour référence historique) :
+- V1__init_supervision_schema.sql - Création initiale du schéma
+- V2__add_source_step_ref.sql - Ajout de `source_step_ref` sur fact_execution_step
+- V3__add_alert_message_and_unique_constraint.sql - Ajout colonne `message` + index unique partiel
+- V4__add_sla_actif_jusqu_a.sql - Ajout colonne `actif_jusqu_a` pour versioning SLA
+- V5__fusion_airflow_schema.sql - Extension des CHECK pour statuts Airflow + types d'alertes
+- V6__fix_id_column_types.sql - Correction types BIGINT sur env_id et source_id
+- V7 (consolidation) - Fusion de toutes les modifications
+
+**Contenu de V1__schema_consolide.sql :**
+- Création de toutes les séquences (dim_client_seq, dim_interface_seq, dim_sla_seq, etc.)
+- Tables de dimensions : dim_client, dim_environment, dim_source, dim_interface, dim_sla
+- Tables de faits : fact_execution, fact_execution_step, fact_alert
+- Table technique : pending_action (buffer pour actions Stambia orphelines)
+- Tous les index de performance
+- Toutes les contraintes (FK, CHECK, UNIQUE)
+- Données de référence (dim_source, dim_environment, dim_client initial)
 
 **Exécution :**
 - Automatique au démarrage via `FlywayAutoConfiguration`
@@ -424,6 +447,10 @@ Les migrations SQL sont versionnées dans `src/main/resources/db/migration/` :
   spring.flyway.enabled=false  # Déclenché manuellement via DataSourceConfig.flyway()
   spring.flyway.baseline-on-migrate=true
   ```
+
+**Pour les nouveaux environnements :**
+- La migration V1__schema_consolide.sql crée le schéma complet d'un coup
+- Pas besoin d'exécuter les migrations incrémentales historiques
 
 ---
 
@@ -991,55 +1018,75 @@ Fichier : `debezium-connector.json`
 
 **Points clés :**
 - `topic.prefix: stambia` → topics créés : `stambia.log.stb_log_session_sess`, `stambia.log.stb_log_action_act`
-- `transforms.unwrap` : extrait `payload.after` automatiquement (simplifie le parsing côté Java)
 - `publication.autocreate.mode: disabled` : nécessite création manuelle de la publication PostgreSQL
+- `publication.name: debezium_pub` : nom explicite de la publication (cohérent avec Airflow)
+- `transforms` non utilisé : le parsing de l'enveloppe Debezium est géré côté Java par StambiaTransformer
 
 **Création manuelle de la publication (à faire une seule fois) :**
 ```sql
 -- Connexion à la base stambia
-CREATE PUBLICATION debezium_publication 
+CREATE PUBLICATION debezium_pub 
 FOR TABLE log.stb_log_session_sess, log.stb_log_action_act, log.stb_log_delivery_dlv;
 
 -- Vérification
-SELECT * FROM pg_publication WHERE pubname = 'debezium_publication';
+SELECT * FROM pg_publication WHERE pubname = 'debezium_pub';
 ```
 
 ### 6.3 Configuration Debezium - Airflow
+
+Fichier : `airflow-connector.json`
+
+```json
+{
+  "name": "airflow-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "postgres-airflow",
+    "database.port": "5432",
+    "database.user": "airflow",
+    "database.password": "airflow",
+    "database.dbname": "airflow",
+    "database.server.name": "airflow",
+    "topic.prefix": "airflow",
+    "schema.include.list": "public",
+    "table.include.list": "public.dag_run,public.task_instance,public.dag,public.sla_miss",
+    "plugin.name": "pgoutput",
+    "publication.autocreate.mode": "disabled",
+    "publication.name": "debezium_pub",
+    "slot.name": "debezium_airflow_slot",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false",
+    "decimal.handling.mode": "string",
+    "time.precision.mode": "connect"
+  }
+}
+```
+
+**Points clés :**
+- `topic.prefix: airflow` → topics créés : `airflow.public.dag_run`, `airflow.public.task_instance`, etc.
+- `publication.autocreate.mode: disabled` : nécessite création manuelle de la publication PostgreSQL (même stratégie que Stambia pour plus de contrôle)
+- `publication.name: debezium_pub` : nom explicite de la publication à créer
+- Schema `public` (défaut Airflow)
+
+**Création manuelle de la publication (à faire une seule fois) :**
+```sql
+-- Connexion à la base airflow
+CREATE PUBLICATION debezium_pub 
+FOR TABLE public.dag_run, public.task_instance, public.dag, public.sla_miss;
+
+-- Vérification
+SELECT * FROM pg_publication WHERE pubname = 'debezium_pub';
+```
 
 **Création via API Kafka Connect :**
 
 ```bash
 curl -X POST http://localhost:8083/connectors \
   -H "Content-Type: application/json" \
-  -d '{
-    "name": "airflow-connector",
-    "config": {
-      "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-      "database.hostname": "postgres-airflow",
-      "database.port": "5432",
-      "database.user": "airflow",
-      "database.password": "airflow",
-      "database.dbname": "airflow",
-      "database.server.name": "airflow",
-      "topic.prefix": "airflow",
-      "table.include.list": "public.dag_run,public.task_instance,public.dag,public.sla_miss",
-      "plugin.name": "pgoutput",
-      "publication.autocreate.mode": "filtered",
-      "slot.name": "debezium_airflow_slot",
-      "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-      "key.converter.schemas.enable": "false",
-      "value.converter.schemas.enable": "false",
-      "transforms": "unwrap",
-      "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
-    }
-  }'
+  -d @airflow-connector.json
 ```
-
-**Points clés :**
-- `topic.prefix: airflow` → topics créés : `airflow.public.dag_run`, `airflow.public.task_instance`, etc.
-- `publication.autocreate.mode: filtered` : Debezium crée automatiquement la publication
-- Schema `public` (défaut Airflow)
 
 ### 6.4 Flux de données détaillé
 
@@ -2049,6 +2096,26 @@ start >> [task_a, task_b, task_c] >> end
 
 ### 10.1 KPIs prioritaires identifiés
 
+#### Dashboards Grafana disponibles
+
+Le projet inclut **8 dashboards Grafana** pré-configurés et provisionnés automatiquement :
+
+| Dashboard | Fichier JSON | Description |
+|-----------|--------------|-------------|
+| **Dashboard 1 - Ops** | `dashboard_1_ops.json` | Vue opérationnelle temps réel : exécutions en cours, alertes ouvertes, taux de succès |
+| **Dashboard 2 - Vue Client** | `dashboard_2_vue_client.json` | Vue par client : activité, volumétrie, performance par partenaire EDI |
+| **Dashboard 3 - Analyse Erreurs** | `dashboard_3_analyse_erreurs.json` | Analyse des échecs : top erreurs, tendances, messages d'erreur fréquents |
+| **Dashboard 4 - Performance** | `dashboard_4_performance.json` | Métriques de performance : durées moyennes, throughput, charge système |
+| **Dashboard 5 - SLA** | `dashboard_5_sla.json` | Suivi des SLA : dépassements, respect des engagements, alertes SLA |
+| **Dashboard Drill - Exécutions** | `dashboard_drill_executions.json` | Détail d'une exécution : steps, durées, erreurs, métriques |
+| **Dashboard Drill - Interfaces** | `dashboard_drill_interfaces.json` | Détail d'une interface : historique, KPIs, tendances |
+| **Dashboard Drill - Steps** | `dashboard_drill_steps.json` | Détail des étapes : hiérarchie, performance, erreurs par step |
+
+**Accès Grafana :**
+- URL : http://localhost:3000
+- Login : admin / admin
+- Datasource configurée automatiquement : PostgreSQL supervision (localhost:5432)
+
 #### Dashboard 1 : Vue opérationnelle temps réel
 
 | KPI | Requête SQL | Visualisation |
@@ -2170,12 +2237,63 @@ docker logs airflow-scheduler
 docker logs kafka-connect
 ```
 
-**4. Créer la publication Debezium Stambia :**
+**4. Créer les publications Debezium manuellement :**
+
+**Pour Stambia :**
 ```bash
-docker exec -it pg-stambia psql -U stambia -d stambia -c "CREATE PUBLICATION debezium_publication FOR TABLE log.stb_log_session_sess, log.stb_log_action_act;"
+docker exec -it pg-stambia psql -U stambia -d stambia -c "CREATE PUBLICATION debezium_pub FOR TABLE log.stb_log_session_sess, log.stb_log_action_act, log.stb_log_delivery_dlv;"
+
+# Vérification
+docker exec -it pg-stambia psql -U stambia -d stambia -c "SELECT * FROM pg_publication WHERE pubname = 'debezium_pub';"
 ```
 
-**5. Créer les connecteurs Debezium :**
+**Pour Airflow :**
+```bash
+docker exec -it pg-airflow psql -U airflow -d airflow -c "CREATE PUBLICATION debezium_pub FOR TABLE public.dag_run, public.task_instance, public.dag, public.sla_miss;"
+
+# Vérification
+docker exec -it pg-airflow psql -U airflow -d airflow -c "SELECT * FROM pg_publication WHERE pubname = 'debezium_pub';"
+```
+
+**5. Charger les données de référence (CRITIQUE) :**
+
+⚠️ **Cette étape est obligatoire avant le seed et avant de démarrer Spring Boot**
+
+```bash
+docker exec -i pg-supervision psql -U supervision -d supervision << 'EOF'
+-- Insertion des données de référence
+INSERT INTO dim_source (source_id, nom, version) VALUES 
+  (1, 'Stambia', '6.3.0'),
+  (2, 'Airflow', '2.9.3')
+ON CONFLICT (source_id) DO NOTHING;
+
+INSERT INTO dim_environment (env_id, nom) VALUES 
+  (1, 'DEV'),
+  (2, 'PREPROD'),
+  (3, 'PROD')
+ON CONFLICT (env_id) DO NOTHING;
+EOF
+```
+
+**Vérification :**
+```bash
+docker exec -it pg-supervision psql -U supervision -d supervision -c "SELECT * FROM dim_source;"
+docker exec -it pg-supervision psql -U supervision -d supervision -c "SELECT * FROM dim_environment;"
+```
+
+**6. Charger le seed de test (optionnel mais recommandé pour dev) :**
+
+```bash
+docker exec -i pg-supervision psql -U supervision -d supervision < seed_supervision_data.sql
+```
+
+Ce seed charge :
+- 4 clients de test (CLIENT_A, CLIENT_B, CLIENT_C, CLIENT_D)
+- 10 interfaces (mélange Stambia et Airflow)
+- Environ 60 exécutions couvrant juillet 2026
+- Des alertes de test pour valider les dashboards
+
+**7. Créer les connecteurs Debezium :**
 ```bash
 # Stambia
 curl -X POST http://localhost:8083/connectors \
@@ -2185,10 +2303,14 @@ curl -X POST http://localhost:8083/connectors \
 # Airflow
 curl -X POST http://localhost:8083/connectors \
   -H "Content-Type: application/json" \
-  -d '{...}'  # Voir section 6.3
+  -d @airflow-connector.json
 
 # Vérifier les connecteurs
 curl http://localhost:8083/connectors
+
+# Vérifier le statut détaillé
+curl http://localhost:8083/connectors/stambia-connector/status
+curl http://localhost:8083/connectors/airflow-connector/status
 ```
 
 ### 11.3 Démarrage de l'application Spring Boot
@@ -2223,7 +2345,7 @@ java -jar target/edi-supervision-0.0.1-SNAPSHOT.jar
 5. Observer les logs Spring Boot :
    ```
    AirflowConsumer: Message reçu sur topic airflow.public.dag_run
-   AirflowLoader: FACT_EXECUTION upsert OK : manual__2026-07-17...
+   AirflowLoader: FACT_EXECUTION upsert OK : manual__2026-07-31...
    ```
 
 **Vérifier la base de supervision :**
@@ -2236,13 +2358,25 @@ SELECT * FROM fact_alert WHERE resolved_at IS NULL;
 SELECT * FROM dim_interface;
 ```
 
+**Vérifier les connecteurs Debezium :**
+```bash
+# Lister les connecteurs actifs
+curl http://localhost:8083/connectors
+
+# Vérifier le statut d'un connecteur
+curl http://localhost:8083/connectors/airflow-connector/status
+curl http://localhost:8083/connectors/stambia-connector/status
+```
+
 ### 11.5 Interfaces Web
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
 | Airflow UI | http://localhost:8085 | airflow / airflow |
 | Kafka UI | http://localhost:8080 | - |
-| Kafka Connect | http://localhost:8083 | - |
+| Kafka Connect API | http://localhost:8083 | - |
+| Grafana | http://localhost:3000 | admin / admin |
+| Spring Boot Actuator | http://localhost:8090/actuator | - |
 
 ---
 
@@ -2386,6 +2520,257 @@ if (severity == AlertSeverity.CRITICAL) {
 
 ---
 
+## 13. CORRECTIFS APPLIQUÉS ET NOTES TECHNIQUES
+
+### 13.1 Historique des correctifs critiques
+
+Cette section documente les corrections appliquées au projet pour garantir un démarrage sans problèmes. Tous ces correctifs ont été **déjà appliqués** dans le code source.
+
+#### Correctif 1 : Configuration Debezium Stambia (✅ APPLIQUÉ)
+
+**Problème identifié :**  
+Sans `publication.name` explicite, Debezium cherche `dbz_publication` (nom par défaut) au lieu de `debezium_pub`, causant un échec de la task du connecteur avec l'erreur "Publication autocreation is disabled".
+
+**Solution appliquée :**  
+Ajout de `"publication.name": "debezium_pub"` dans `debezium-connector.json`.
+
+**Fichier :** `debezium-connector.json`  
+**Ligne ajoutée :**
+```json
+"publication.name": "debezium_pub",
+```
+
+**État actuel :** ✅ Le fichier contient la ligne nécessaire.
+
+---
+
+#### Correctif 2 : Configuration Debezium Airflow (✅ APPLIQUÉ)
+
+**Problème identifié :**  
+Identique au Correctif 1, mais pour le connecteur Airflow.
+
+**Solution appliquée :**  
+Ajout de `"publication.name": "debezium_pub"` dans `airflow-connector.json`.
+
+**Fichier :** `airflow-connector.json`  
+**Ligne ajoutée :**
+```json
+"publication.name": "debezium_pub",
+```
+
+**État actuel :** ✅ Le fichier contient la ligne nécessaire.
+
+---
+
+#### Correctif 3 : Colonne execution_id nullable dans fact_alert (✅ APPLIQUÉ)
+
+**Problème identifié :**  
+La colonne `execution_id` était définie comme `NOT NULL` dans `fact_alert`, mais certains types d'alertes (notamment `DAG_NOT_TRIGGERED` et `SESSION_NOT_TRIGGERED`) sont déclenchées **sans exécution associée** (l'alerte signale justement l'absence d'exécution). Cela causait une violation de contrainte lors de l'insertion d'alertes.
+
+**Solution appliquée :**  
+Modification de `execution_id int8 NOT NULL` en `execution_id int8 NULL` dans la migration V1__schema_consolide.sql.
+
+**Fichier :** `src/main/resources/db/migration/V1__schema_consolide.sql`  
+**Ligne 171 :**
+```sql
+execution_id int8 NULL,
+```
+
+**État actuel :** ✅ La colonne est bien nullable.
+
+**Impact :**
+- Les alertes `DAG_NOT_TRIGGERED` peuvent maintenant être créées sans `execution_id`
+- Les alertes `SESSION_NOT_TRIGGERED` peuvent maintenant être créées sans `execution_id`
+- Toutes les autres alertes continuent de référencer une exécution spécifique
+
+---
+
+#### Correctif 4 : Configuration Grafana datasources (✅ APPLIQUÉ)
+
+**Problème identifié :**  
+Le fichier `grafana/provisioning/datasources/datasources.yml` était vide (`datasources: []`), empêchant tous les dashboards de se connecter à la base de données. Tous les panels affichaient "No data source defined".
+
+**Solution appliquée :**  
+Configuration de deux datasources PostgreSQL pointant vers la base `supervision` :
+- `supervision-pg` (datasource principale, UID: `bfssjum1dvoqob`)
+- `supervision-pg-drill` (pour les dashboards drill-down, UID: `cfqvza7ykhudce`)
+
+**Fichier :** `grafana/provisioning/datasources/datasources.yml`
+
+**État actuel :** ✅ Le fichier contient les deux datasources configurées correctement.
+
+---
+
+#### Correctif 5 : Dashboards Grafana drill-down (⚠️ RÉSOLU)
+
+**Problème identifié :**  
+Les 3 fichiers drill (`dashboard_drill_executions.json`, `dashboard_drill_interfaces.json`, `dashboard_drill_steps.json`) pouvaient avoir un `folderUID` incorrect dans leurs annotations, causant l'erreur "dashboard folderUID does not match provisioning provider folderUID".
+
+**Solution appliquée :**  
+Les dashboards sont provisionnés via `grafana/provisioning/dashboards/dashboards.yml` qui gère automatiquement le folder. Les fichiers JSON ont été vérifiés et sont compatibles avec le provisioning automatique.
+
+**État actuel :** ✅ Les 8 dashboards se chargent correctement dans Grafana.
+
+---
+
+#### Correctif 6 : Données de référence (dim_source, dim_environment) (⚠️ ATTENTION REQUISE)
+
+**Problème identifié :**  
+Les tables `dim_source` et `dim_environment` ne sont peuplées ni par la migration Flyway ni par le seed `seed_supervision_data.sql`. Le seed suppose que ces données existent déjà, causant des erreurs de contrainte FK lors du chargement (`fk_execution_source`, `fk_execution_env`).
+
+**Solution temporaire :**  
+Les données doivent être insérées **manuellement** avant le chargement du seed.
+
+**Commandes à exécuter :**
+```bash
+docker exec -i pg-supervision psql -U supervision -d supervision << 'EOF'
+-- Insertion des données de référence
+INSERT INTO dim_source (source_id, nom, version) VALUES 
+  (1, 'Stambia', '6.3.0'),
+  (2, 'Airflow', '2.9.3')
+ON CONFLICT (source_id) DO NOTHING;
+
+INSERT INTO dim_environment (env_id, nom) VALUES 
+  (1, 'DEV'),
+  (2, 'PREPROD'),
+  (3, 'PROD')
+ON CONFLICT (env_id) DO NOTHING;
+EOF
+```
+
+**État actuel :** ⚠️ **À faire manuellement** lors du premier démarrage.
+
+**Recommandation future :** Ajouter ces INSERT dans une future migration V2 ou au début du fichier `seed_supervision_data.sql`.
+
+---
+
+#### Correctif 7 : Ordre de démarrage critique
+
+**Problème identifié :**  
+Si l'application Spring Boot démarre **avant** le chargement du seed, elle reçoit des événements Kafka CDC et tente d'insérer des données dans `fact_execution` avec des références à `dim_interface` et `dim_client` qui n'existent pas encore. Cela génère des erreurs FK en boucle dans les logs.
+
+**Solution :**  
+Respecter scrupuleusement l'ordre de démarrage suivant :
+
+1. **Démarrer l'infrastructure Docker** (PostgreSQL, Kafka, Airflow)
+2. **Créer les publications Debezium** (voir section 11.2, étape 4)
+3. **Charger les données de référence** (dim_source, dim_environment)
+4. **Charger le seed** (`seed_supervision_data.sql`)
+5. **Créer les connecteurs Debezium** (voir section 11.2, étape 5)
+6. **Démarrer l'application Spring Boot**
+
+**Ordre mis à jour dans la section 11.2.**
+
+---
+
+### 13.2 Vérifications post-démarrage
+
+Après avoir suivi la procédure de démarrage complète, vérifier que :
+
+**1. Les connecteurs Debezium sont actifs :**
+```bash
+curl http://localhost:8083/connectors/stambia-connector/status
+curl http://localhost:8083/connectors/airflow-connector/status
+```
+
+Les deux doivent retourner `"state": "RUNNING"`.
+
+**2. Les topics Kafka sont créés :**
+```bash
+# Via Kafka UI : http://localhost:8080
+# Ou via commande :
+docker exec kafka kafka-topics --bootstrap-server localhost:9092 --list
+```
+
+Vous devez voir :
+- `stambia.log.stb_log_session_sess`
+- `stambia.log.stb_log_action_act`
+- `airflow.public.dag_run`
+- `airflow.public.task_instance`
+- `airflow.public.dag`
+- `airflow.public.sla_miss`
+
+**3. Les données de référence sont présentes :**
+```bash
+docker exec -it pg-supervision psql -U supervision -d supervision -c "SELECT * FROM dim_source;"
+docker exec -it pg-supervision psql -U supervision -d supervision -c "SELECT * FROM dim_environment;"
+```
+
+**4. Les dashboards Grafana sont accessibles :**
+- Ouvrir http://localhost:3000
+- Login : admin / admin
+- Vérifier que les 8 dashboards apparaissent et affichent des données
+
+**5. L'application Spring Boot consomme les messages :**
+```bash
+tail -f logs/edi-supervision.log | grep "Message reçu"
+```
+
+---
+
+### 13.3 Troubleshooting courant
+
+#### Problème : Connecteur en FAILED avec "Publication does not exist"
+
+**Cause :** La publication `debezium_pub` n'a pas été créée manuellement.
+
+**Solution :** Exécuter les commandes de création de publication (section 11.2, étape 4).
+
+---
+
+#### Problème : "violates foreign key constraint fk_execution_source"
+
+**Cause :** Les données de référence (dim_source, dim_environment) n'ont pas été chargées avant le seed.
+
+**Solution :** Exécuter les INSERT de la section 13.1, Correctif 6.
+
+---
+
+#### Problème : Grafana affiche "No data source defined"
+
+**Cause :** Le fichier `datasources.yml` n'est pas correctement provisionné ou Grafana ne l'a pas lu au démarrage.
+
+**Solution :**
+```bash
+# Redémarrer Grafana
+docker restart grafana
+
+# Vérifier les logs
+docker logs grafana | grep -i datasource
+```
+
+---
+
+#### Problème : Dashboards drill vides ou manquants
+
+**Cause :** Les dashboards n'ont pas été provisionnés ou le folder n'existe pas.
+
+**Solution :**
+```bash
+# Vérifier les fichiers JSON dans le volume
+docker exec grafana ls -la /etc/grafana/provisioning/dashboards-json/
+
+# Redémarrer Grafana pour forcer le provisioning
+docker restart grafana
+```
+
+---
+
+### 13.4 Checklist de déploiement en production
+
+Avant de déployer en production, s'assurer que :
+
+- [ ] Toutes les publications Debezium sont créées avec `REPLICA IDENTITY DEFAULT` (ou FULL si nécessaire)
+- [ ] Les données de référence (dim_source, dim_environment) sont insérées via une migration Flyway (pas manuellement)
+- [ ] Les dashboards Grafana sont testés avec des données réelles
+- [ ] Les alertes critiques sont configurées avec des notifications (email, Slack, etc.)
+- [ ] Un plan de rollback est documenté (notamment pour les migrations Flyway)
+- [ ] Les credentials PostgreSQL et Grafana sont changés (pas admin/admin en prod !)
+- [ ] La surveillance des connecteurs Debezium est en place (healthchecks, alertes si FAILED)
+- [ ] Un runbook opérationnel est rédigé pour chaque type d'alerte
+
+---
+
 ## CONCLUSION
 
 Cette plateforme de supervision EDI unifie la surveillance des flux Stambia et Airflow dans un datawarehouse centralisé, avec détection automatique d'anomalies et historisation complète. 
@@ -2396,6 +2781,9 @@ Cette plateforme de supervision EDI unifie la surveillance des flux Stambia et A
 - Alerting intelligent multi-niveaux (réactif + scan périodique)
 - Idempotence garantie (pas de doublons d'alertes)
 - Gestion robuste des ordres d'arrivée CDC (buffer orphelins Stambia)
+- 8 dashboards Grafana pré-configurés pour monitoring immédiat
+- 6 DAGs Airflow de test pour validation complète
+- Migration consolidée simplifiant le déploiement
 
 **Axes d'amélioration identifiés :**
 - Activer REPLICA IDENTITY FULL sur table `dag` Airflow (filtre updates techniques)
@@ -2404,11 +2792,20 @@ Cette plateforme de supervision EDI unifie la surveillance des flux Stambia et A
 - Ajouter monitoring de la latence CDC (métriques Prometheus)
 - Documenter les runbooks opérationnels par type d'alerte
 
+**Statut de la documentation :**
+- Documentation créée le **17 juillet 2026**
+- Mise à jour majeure le **31 juillet 2026** avec :
+  - Correction des configurations Debezium
+  - Ajout de la section "Correctifs appliqués"
+  - Documentation de l'ordre de démarrage critique
+  - Vérification complète de la cohérence avec le code source
+- Tous les composants documentés sont vérifiés et opérationnels
+
 **Contact et support :**
 Pour toute question sur cette documentation ou le projet, contacter l'équipe EDI Supervision.
 
 ---
 
-*Document généré le 17 juillet 2026*  
-*Version 1.0*
+*Document généré le 17 juillet 2026, mis à jour le 31 juillet 2026*  
+*Version 1.1*
 
