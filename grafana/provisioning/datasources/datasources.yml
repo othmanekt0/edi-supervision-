@@ -1,2 +1,26 @@
 apiVersion: 1
-datasources: []
+datasources:
+  - name: supervision-pg
+    type: postgres
+    uid: bfssjum1dvoqob
+    url: pg-supervision:5432
+    user: supervision
+    secureJsonData:
+      password: supervision
+    jsonData:
+      database: supervision
+      sslmode: disable
+      postgresVersion: 1600
+    isDefault: true
+
+  - name: supervision-pg-drill
+    type: postgres
+    uid: cfqvza7ykhudce
+    url: pg-supervision:5432
+    user: supervision
+    secureJsonData:
+      password: supervision
+    jsonData:
+      database: supervision
+      sslmode: disable
+      postgresVersion: 1600
