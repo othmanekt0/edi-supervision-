@@ -13,7 +13,7 @@
     },
     "annotations": {
       "grafana.app/createdBy": "user:dfqvz3nvoyx34d",
-      "grafana.app/folder": "bfssfjhjmppmof",
+      "grafana.app/folder": "eftr8ntcz2yv4f",
       "grafana.app/saved-from-ui": "Grafana v13.1.0 (b309c9bb3b)",
       "grafana.app/updatedBy": "user:dfqvz3nvoyx34d",
       "grafana.app/updatedTimestamp": "2026-07-22T18:00:23Z",
@@ -44,14 +44,14 @@
       }
     ],
     "cursorSync": "Off",
-    "description": "Executions FAILED ou FAILURE pour une interface donnee — drill-down depuis le dashboard Interfaces",
+    "description": "Executions FAILED ou FAILURE pour une interface donnee â€” drill-down depuis le dashboard Interfaces",
     "editable": true,
     "elements": {
       "panel-1": {
         "kind": "Panel",
         "spec": {
           "id": 1,
-          "title": "Interface sélectionnée",
+          "title": "Interface sÃ©lectionnÃ©e",
           "description": "",
           "links": [],
           "data": {
@@ -130,7 +130,7 @@
         "kind": "Panel",
         "spec": {
           "id": 3,
-          "title": "Executions FAILED / FAILURE — cliquer sur Ref pour voir les sous-sessions",
+          "title": "Executions FAILED / FAILURE â€” cliquer sur Ref pour voir les sous-sessions",
           "description": "",
           "links": [],
           "data": {
@@ -151,7 +151,7 @@
                         "editorMode": "code",
                         "format": "table",
                         "rawQuery": true,
-                        "rawSql": "SELECT\n  e.execution_id                                      AS \"execution_id\",\n  e.source_execution_ref                              AS \"Ref Execution\",\n  e.status                                            AS \"Statut\",\n  e.start_datetime                                    AS \"Début\",\n  e.end_datetime                                      AS \"Fin\",\n  e.duration_seconds                                  AS \"Durée (s)\",\n  COALESCE(env.nom, '')                               AS \"Environnement\",\n  e.server_name                                       AS \"Serveur\",\n  e.retry_count                                       AS \"Retry\",\n  e.error_message                                     AS \"Erreur\"\nFROM fact_execution e\nJOIN dim_interface i  ON i.interface_id = e.interface_id\nLEFT JOIN dim_environment env ON env.env_id = e.env_id\nWHERE i.code = '$interface_code'\n  AND UPPER(e.status) IN ('FAILED', 'FAILURE')\n  AND e.start_datetime >= $__timeFrom()\n  AND e.start_datetime <= $__timeTo()\nORDER BY e.start_datetime DESC",
+                        "rawSql": "SELECT\n  e.execution_id                                      AS \"execution_id\",\n  e.source_execution_ref                              AS \"Ref Execution\",\n  e.status                                            AS \"Statut\",\n  e.start_datetime                                    AS \"DÃ©but\",\n  e.end_datetime                                      AS \"Fin\",\n  e.duration_seconds                                  AS \"DurÃ©e (s)\",\n  COALESCE(env.nom, '')                               AS \"Environnement\",\n  e.server_name                                       AS \"Serveur\",\n  e.retry_count                                       AS \"Retry\",\n  e.error_message                                     AS \"Erreur\"\nFROM fact_execution e\nJOIN dim_interface i  ON i.interface_id = e.interface_id\nLEFT JOIN dim_environment env ON env.env_id = e.env_id\nWHERE i.code = '$interface_code'\n  AND UPPER(e.status) IN ('FAILED', 'FAILURE')\n  AND e.start_datetime >= $__timeFrom()\n  AND e.start_datetime <= $__timeTo()\nORDER BY e.start_datetime DESC",
                         "sql": {
                           "columns": [
                             {
@@ -191,7 +191,7 @@
                 "sortBy": [
                   {
                     "desc": true,
-                    "displayName": "Début"
+                    "displayName": "DÃ©but"
                   }
                 ]
               },
@@ -295,7 +295,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Début"
+                      "options": "DÃ©but"
                     },
                     "properties": [
                       {
@@ -319,7 +319,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "Durée (s)"
+                      "options": "DurÃ©e (s)"
                     },
                     "properties": [
                       {
@@ -382,7 +382,7 @@
     },
     "links": [
       {
-        "title": "← Retour Interfaces",
+        "title": "â† Retour Interfaces",
         "type": "link",
         "icon": "arrow-left",
         "tooltip": "",
@@ -421,7 +421,7 @@
       "hideTimepicker": false,
       "fiscalYearStartMonth": 0
     },
-    "title": "EDI — Executions FAILED par Interface",
+    "title": "EDI â€” Executions FAILED par Interface",
     "variables": [
       {
         "kind": "TextVariable",
@@ -435,9 +435,10 @@
           "label": "Interface",
           "hide": "dontHide",
           "skipUrlSync": false,
-          "description": "Code de l'interface (passé automatiquement depuis le dashboard Interfaces)"
+          "description": "Code de l'interface (passÃ© automatiquement depuis le dashboard Interfaces)"
         }
       }
     ]
   }
 }
+
