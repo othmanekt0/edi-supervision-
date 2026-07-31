@@ -13,7 +13,7 @@
     },
     "annotations": {
       "grafana.app/createdBy": "user:dfqvz3nvoyx34d",
-      "grafana.app/folder": "bfssfjhjmppmof",
+      "grafana.app/folder": "eftr8ntcz2yv4f",
       "grafana.app/saved-from-ui": "Grafana v13.1.0 (b309c9bb3b)",
       "grafana.app/updatedBy": "user:dfqvz3nvoyx34d",
       "grafana.app/updatedTimestamp": "2026-07-22T18:00:23Z",
@@ -209,7 +209,7 @@
         "kind": "Panel",
         "spec": {
           "id": 3,
-          "title": "Interfaces avec executions FAILED / FAILURE — cliquer pour drill-down",
+          "title": "Interfaces avec executions FAILED / FAILURE â€” cliquer pour drill-down",
           "description": "",
           "links": [],
           "data": {
@@ -450,7 +450,8 @@
       "hideTimepicker": false,
       "fiscalYearStartMonth": 0
     },
-    "title": "EDI — Supervision Interfaces (Failed)",
+    "title": "EDI â€” Supervision Interfaces (Failed)",
     "variables": []
   }
 }
+
